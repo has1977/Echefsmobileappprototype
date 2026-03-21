@@ -1,0 +1,95 @@
+Create a complete, production-ready mobile app UI/UX prototype in Figma (or Stitch) for eChefs — a multi-branch, multi-language restaurant ordering & operations platform. Use the brand colors #667c67 (primary) and #e4dbc4 (accent). Deliver a polished, developer-ready design system, interactive flows, and annotated specifications that cover mobile customer, waiter, kitchen (KDS), manager, and admin experiences. Include Arabic and English and Russian and Kyrgyz language variants and RTL support for Arabic with allowed to remove or add language.
+
+Project goals
+- Fast, frictionless in-restaurant ordering via QR and NFC.
+- Reduce waiter workload, speed ordering, increase Average Order Value via upsells/gifts/promotions.
+- Real-time kitchen coordination across multiple kitchen sections.
+- Centralized branch management and analytics.
+
+Audience & platforms
+- Primary: diners (mobile web + native mobile).
+- Secondary: waiters (mobile/tablet), kitchen staff (large touch displays), branch managers and admins (mobile + web dashboard).
+- Deliver for mobile (iPhone/Android) and provide tablet & large-screen KDS templates.
+
+Required deliverables
+1. Design system (Figma library + tokens)
+   - Color palette with brand colors + accessible contrast variants.
+   - Typography scale, spacing system, icons, components (buttons, inputs, lists, cards, badges, toasts, modals).
+   - Design tokens (colors, shadows, border radii).
+   - Component states and accessibility notes (WCAG contrast, keyboard focus, ARIA hints).
+
+2. User flows & interactive prototypes (clickable)
+   - Onboarding / Welcome flow: language selector, branch detection flow (QR/NFC/manual), region selection (smoking/non-smoking/main hall) with visual table map and photo thumbnails, create/scan table QR generation flow for printing.
+   - Customer ordering flow: branch-specific menu, categories, dish detail, modifiers (remove/add, spice level, extras), badges (hot/new/discount), promotions, loyalty offers, product reviews & ratings (submit & view), persistent cart, upsell suggestions, checkout options.
+   - Payment flows: pay with waiter (cash), in-app card (Stripe integration annotated), custom POS payment, QR pay, split bill, tip selection, payment status sync (in-restaurant / delivery / takeaway).
+   - Order lifecycle: order confirmation, real-time tracking (received → preparing → ready → served → completed), live updates via WebSocket/Push, retry/sync on offline.
+   - Waiter interface: manual order creation, modify/cancel orders, assign table, request payments, bill splitting, view order statuses, quick actions and shortcuts.
+   - Kitchen Display System (KDS): multi-screen layouts, per-section routing, timers, priority sorting, delay details, audible alerts, bulk actions, order prep status updates.
+   - Manager dashboard (mobile/web): live orders, revenue metrics, menu management per branch, create/enable/disable branch menus, promotions, loyalty rules, daily reports (daily revenue, top dishes, peak hours).
+   - Admin dashboard: multi-branch controls, users & roles, global analytics, system settings, guest browsing mode.
+   - Offline flows: local caching of menu & queued orders, automatic sync on reconnect, conflict resolution UI.
+   - Notifications: push/in-app/SMS templates for new orders, ready alerts, payment requests, promotions.
+
+3. Screens & components to design (mobile + tablet + KDS)
+   - Splash / Welcome / Language selector / Branch & region selection with table map.
+   - Menu list (category tiles), menu item card, item detail with modifiers, images, reviews.
+   - Cart & upsell modal, persistent floating cart, checkout & payment screens, receipt.
+   - Loyalty & promotions page, digital loyalty card UI, tier visuals (silver/gold/bronze).
+   - Offers page & banner system.
+   - Reviews & moderation UI (customer submit + manager moderation + manager responses).
+   - Waiter app screens: order builder, table map, orders list, payments.
+   - KDS screens: per-section queues, timers, order detail modal, audio alert control.
+   - Manager/Admin dashboards: charts, tables, filters, settings panels, role management.
+   - Microinteractions: add/remove items, modifier selections, successful payment animation, order status transitions.
+   - Error & offline states, loading skeletons, empty states.
+
+4. Product & technical annotations
+   - Per-screen notes: data fields, API endpoints suggestions (REST/gRPC), WebSocket events, expected payloads for order creation, status updates, and payment sync.
+   - Offline-first data layer recommendation (IndexedDB/SQLite for mobile), conflict resolution rules, optimistic updates.
+   - KDS architecture notes: scalable message bus, routing by dish section, retries, audible alert rules.
+   - Payment integration notes: Stripe for card flows, PCI considerations, payment status sync scenarios.
+   - Localization & RTL handling guidelines, dynamic text expansion, content management approach for branch-specific menus/offers.
+   - Accessibility checklist: WCAG contrast, scalable text, screen reader labels, keyboard navigation for web.
+
+5. Interaction, content & UX rules
+   - Branch-specific menus: allow each branch to enable/disable its menu items and toggle promotions/gifts.
+   - Table detection: QR link format example (https://echefs.app/table/12) and NFC behavior.
+   - Table booking & regions: visual map per branch, region selection (smoking/non-smoking...).
+   - Loyalty rules: point accrual example (1$ = 10 points), redemption flows, expiration, tiers, and digital card UI.
+   - Promotions engine: create/display limited-time deals, happy hour, automatic upsell rules.
+   - Reviews & moderation: star rating, text review, admin moderation UI, response templates.
+   - AI & future features placeholders: dish recommendations, demand forecasting, sentiment analysis — create placeholder components indicating where recommendations would appear.
+
+6. File organization & handoff
+   - Figma file with organized pages: Design System, Tokens, Components, Customer Flow, Waiter Flow, KDS, Manager, Admin, Prototypes, Annotations.
+   - Variants for Arabic (RTL) and English (LTR).
+   - Export-ready assets (SVG icons, 2x/3x PNGs), CSS snippet examples for tokens, and a JSON tokens export.
+   - Developer handoff notes: component props, responsive rules, example API contracts, and a Jira/Notion-ready task checklist.
+
+Design style & references
+- Clean, modern, high-contrast UI inspired by top delivery apps (Uber Eats, DoorDash) but tailored for in-restaurant speed and table workflows.
+- Use tile-based menus, persistent cart, clear CTAs, minimal touches for fast flows.
+- KDS / waiter UIs optimized for rapid scanning and large touch targets.
+- Micro-animations for smooth transitions; keep motion subtle and purposeful.
+
+Acceptance criteria
+- Fully interactive Figma prototype covering all flows listed above with working navigation.
+- Complete design system + tokens and component library with variants.
+- Annotated screens with technical specs for engineering (APIs, data fields, events).
+- Arabic RTL variant with verified layout & translated copy for all screens.
+- Exportable assets for development and a 1–2 page handoff README summarizing integration points, offline behavior, payment flow, and KDS routing.
+
+Tone for copy
+- Arabic and English copy should be concise, friendly, and action-oriented. Provide final text strings in both languages for all screens.
+
+Priority & timeline suggestion
+- MVP priority: QR/NFC onboarding, branch/table selection, menu browsing, cart, order placement, KDS, basic manager dashboard, payment flows — prototype in 2–3 weeks.
+- Full scope (including waiter app, full admin, offline sync, multi-language polish) in 5–8 weeks.
+
+Additional notes
+- Provide sample data for 3 branches (each with different menus, regions, and promotions) for prototype testing.
+- Include at least one accessibility audit report and a short list of recommended A11y fixes.
+
+Deliver the Figma (or Stitch) file link, a PDF summary, and a short video walkthrough (2–3 minutes) demonstrating main flows.
+
+If you confirm, I will convert this into a concise Figma brief with priorities and a task breakdown for designers and engineers.

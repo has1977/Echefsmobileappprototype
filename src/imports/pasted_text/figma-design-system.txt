@@ -1,0 +1,102 @@
+Create a complete, production-ready Figma design file and library that contains every UI/UX asset, token, and page needed for the eChefs app so designers and engineers can work fast and every page behaves as one unified application. Produce everything separately and consistently (tokens, components, pages) so the file is performant, scalable, and ready for developer handoff.
+
+Scope & purpose
+- Single Figma file + published Team Library that includes: design tokens, full component system, page templates, responsive frames, prototypes, localized content (EN + AR with RTL), and export-ready assets.
+- Optimize structure and performance so designers can build screens quickly using instances and overrides — avoid duplicated components, large flattened images, or heavy boolean complexity.
+
+Deliverables (explicit)
+1. File structure & pages
+   - Pages: 00_Docs, 01_Tokens, 02_DesignSystem, 03_Components, 04_Patterns, 05_Flows_Customer, 06_Flows_Waiter, 07_KDS, 08_Manager, 09_Admin, 10_Prototypes, 11_Assets, 12_Arabic_RTL, 13_Exports.
+   - Each page named with numeric prefix and README frame at top with purpose and usage.
+
+2. Design tokens (single source)
+   - Colors: primary (#667c67), accent (#e4dbc4) + semantic palette (surface, bg, text primary/secondary, success/error/warning), and accessible variants.
+   - Typography: Font family, weights, sizes, line-heights, letter-spacing, scale tokens (H1..H6, body, caption, label).
+   - Spacing scale: tokens (spacing-4,8,12,...), radii, shadows, z-index tokens.
+   - Elevations & opacity tokens.
+   - Exportable formats: JSON, CSS variables, and token naming convention (kebab-case) in 01_Tokens.
+
+3. Component system (atomic → composite)
+   - Atomic: buttons (primary/secondary/tertiary/icon), form inputs, selects, toggles, chips, badges, avatars, icons (SVG components).
+   - Composite: cards (menu item), persistent cart, modals, toasts, navbars, table map, loyalty card, review card, order row.
+   - KDS & Waiter specific: order tile, timer chip, priority badge, bulk-action footer.
+   - Variants for size (sm/md/lg), state (default/hover/pressed/disabled/focus/error), theme (light/dark), and locale (LTR/RTL).
+   - Use Auto Layout, constraints, and component properties (variants + boolean properties) for fast adjustments.
+
+4. Layouts, grids & responsive rules
+   - Global grid: 4pt baseline grid, 8pt spacing system; responsive breakpoints: Mobile 360/375/414, Tablet 768/1024, Desktop 1440.
+   - Pre-built frames for each breakpoint with content padding tokens.
+   - Constraints and resizing rules on every component for responsive behavior.
+
+5. Buttons, controls & touch targets
+   - Minimum touch target 44×44pt.
+   - Primary button spec (height, padding, radius), icon-only button sizes, disabled/pressed styles, microcopy tokens.
+   - Default button sizing tokens and a “button-size” component variant.
+
+6. Colors & accessibility
+   - Provide contrast ratios for each token, WCAG AA/AAA notes.
+   - High-contrast theme option and tooltips on tokens indicating pass/fail.
+   - Color usage guidelines: semantic mapping for status and backgrounds.
+
+7. Icons & imagery
+   - Optimized SVG icon set (componentized), limited to necessary icons.
+   - Image placeholders as responsive components with focal-point control; instruct to use optimized web formats (SVG/WEBP).
+   - Avoid embedded raster at large sizes; provide 1x/2x/3x export variants.
+
+8. Naming conventions & layer hygiene
+   - Use BEM-like naming for components and frames: component/name/variant.
+   - Auto-layout frames named with token prefixes and states: btn/primary/md/default.
+   - Flatten complex boolean shapes into SVG icons; avoid unnecessary grouped layers.
+
+9. Prototyping & interactions
+   - Centralized interactive components (cart, modals) with single master component to ensure global behavior.
+   - Use interaction variants and smart animate for transitions; keep micro-animations lightweight.
+   - Prototype flows cover onboarding, branch/table selection, menu, cart, checkout, KDS, waiter flows, manager/admin dashboards.
+
+10. Localization & RTL support
+    - Duplicate core components with RTL constraints and mirrored layouts under 12_Arabic_RTL.
+    - Text token list in 00_Docs with English/Arabic strings; include examples of dynamic text expansion handling.
+    - Mark components as “rtl-ready” with auto-flip rules.
+
+11. Performance & optimization rules
+    - Limit pages to necessary canvases; avoid thousands of isolated frames.
+    - Use component instances rather than copies; publish library and use instances.
+    - Optimize images (WebP), use SVGs for icons, minimize boolean compound shapes.
+    - Keep hidden layers minimal; use visibility toggles instead of duplicating artboards.
+    - Provide checklist in 00_Docs for designers: flatten only when needed, reduce nested components depth, avoid huge vector path counts.
+
+12. Assets & export settings
+    - Export presets for icons (SVG), images (WEBP/PNG 2x/3x), and background assets.
+    - Provide a consistent naming convention for exported assets and an assets manifest file.
+
+13. Handoff & developer-ready annotations
+    - Per-component spec frames with tokens mapping, CSS snippets, example JSON payloads for APIs, and spacing guide.
+    - Provide code-friendly token export (Figma Tokens plugin JSON) and a README for developers.
+    - Include example Storybook props mapping and variant table.
+
+14. Versioning & library policies
+    - Publish Team Library with semantic versioning; changelog frame in 00_Docs.
+    - Guidelines for branching: feature prototypes in private pages, merge to main after review.
+
+15. Acceptance criteria
+    - All components built as variants with auto-layout and documented tokens.
+    - One-click theme change via token swaps (light/dark, high-contrast).
+    - Arabic RTL variant present and validated.
+    - Prototype navigation functional across major flows.
+    - Exportable tokens (JSON/CSS), SVG icon set, and assets manifest included.
+    - Performance checklist satisfied (file under reasonable size; no excessive vectors/images).
+
+Instructions for the Figma designer/AI
+- Build tokens first (01_Tokens) and link components to tokens.
+- Create atomic components, then compose complex components using instances.
+- Use Auto Layout and component properties extensively — avoid manual resizing.
+- Keep all interactive/global components in 02_DesignSystem and publish as library.
+- Validate every screen against Acceptance Criteria before moving it to 10_Prototypes.
+- Add inline annotations in English and Arabic for any complex behavior.
+
+Output format request
+- Deliver a single Figma file + published Team Library and:
+  - JSON token export, SVG icon pack, assets manifest, and a 1-page README.
+  - Short 2–3 minute walkthrough video and a PDF export of design system summary.
+
+Use this prompt to create the Figma file and library exactly as specified so all pages work as one cohesive, high-performance application.

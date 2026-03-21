@@ -1,0 +1,185 @@
+/* ========================================
+   eChefs Brand Utility Classes
+   Quick access to brand colors via Tailwind
+   ======================================== */
+
+@layer utilities {
+  /* Primary Brand Colors */
+  .bg-brand-primary {
+    background-color: var(--color-primary);
+  }
+  
+  .bg-brand-primary-50 {
+    background-color: var(--color-primary-50);
+  }
+  
+  .bg-brand-primary-200 {
+    background-color: var(--color-primary-200);
+  }
+  
+  .bg-brand-primary-400 {
+    background-color: var(--color-primary-400);
+  }
+  
+  .bg-brand-primary-600 {
+    background-color: var(--color-primary-600);
+  }
+  
+  .bg-brand-primary-800 {
+    background-color: var(--color-primary-800);
+  }
+  
+  .text-brand-primary {
+    color: var(--color-primary);
+  }
+  
+  .text-brand-primary-600 {
+    color: var(--color-primary-600);
+  }
+  
+  .text-brand-primary-800 {
+    color: var(--color-primary-800);
+  }
+  
+  .border-brand-primary {
+    border-color: var(--color-primary);
+  }
+  
+  /* Accent Colors */
+  .bg-brand-accent {
+    background-color: var(--color-accent);
+  }
+  
+  .bg-brand-accent-50 {
+    background-color: var(--color-accent-50);
+  }
+  
+  .bg-brand-accent-200 {
+    background-color: var(--color-accent-200);
+  }
+  
+  .bg-brand-accent-600 {
+    background-color: var(--color-accent-600);
+  }
+  
+  .text-brand-accent {
+    color: var(--color-accent);
+  }
+  
+  .text-brand-accent-600 {
+    color: var(--color-accent-600);
+  }
+  
+  /* Gradient Backgrounds */
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .bg-gradient-warm {
+    background: var(--gradient-warm);
+  }
+  
+  /* Semantic Colors */
+  .bg-success {
+    background-color: var(--color-success);
+  }
+  
+  .bg-success-600 {
+    background-color: var(--color-success-600);
+  }
+  
+  .text-success {
+    color: var(--color-success);
+  }
+  
+  .text-success-600 {
+    color: var(--color-success-600);
+  }
+  
+  .bg-warning {
+    background-color: var(--color-warning);
+  }
+  
+  .bg-warning-700 {
+    background-color: var(--color-warning-700);
+  }
+  
+  .text-warning {
+    color: var(--color-warning);
+  }
+  
+  .text-warning-700 {
+    color: var(--color-warning-700);
+  }
+  
+  .bg-error {
+    background-color: var(--color-error);
+  }
+  
+  .bg-error-700 {
+    background-color: var(--color-error-700);
+  }
+  
+  .text-error {
+    color: var(--color-error);
+  }
+  
+  .text-error-700 {
+    color: var(--color-error-700);
+  }
+  
+  .bg-info {
+    background-color: var(--color-info);
+  }
+  
+  .bg-info-700 {
+    background-color: var(--color-info-700);
+  }
+  
+  .text-info {
+    color: var(--color-info);
+  }
+  
+  .text-info-700 {
+    color: var(--color-info-700);
+  }
+  
+  /* Dark Mode */
+  .bg-dark-surface {
+    background-color: var(--color-dark-surface);
+  }
+  
+  .bg-dark-100 {
+    background-color: var(--color-dark-100);
+  }
+  
+  .bg-dark-300 {
+    background-color: var(--color-dark-300);
+  }
+  
+  /* Surface Colors */
+  .bg-surface {
+    background-color: var(--color-surface);
+  }
+  
+  .bg-surface-alt {
+    background-color: var(--color-surface-alt);
+  }
+  
+  .bg-surface-600 {
+    background-color: var(--color-surface-600);
+  }
+  
+  /* Text Colors */
+  .text-contrast {
+    color: var(--color-text-contrast);
+  }
+  
+  .text-muted {
+    color: var(--color-muted);
+  }
+}
