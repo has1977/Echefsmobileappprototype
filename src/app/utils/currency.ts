@@ -8,7 +8,7 @@ import type { CurrencyConfig } from '../hooks/useCurrency';
  * @returns Formatted currency string
  */
 export function formatLoyaltyCurrency(
-  amount: number,
+  amount: number | undefined | null,
   options?: {
     showSymbol?: boolean;
     decimals?: number;
@@ -18,7 +18,10 @@ export function formatLoyaltyCurrency(
   const settings = db.getSettings();
   const symbol = settings.loyalty.currencySymbol;
   
-  const formattedAmount = amount.toLocaleString('en-US', {
+  // Handle invalid amounts
+  const validAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  
+  const formattedAmount = validAmount.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -45,7 +48,7 @@ export function formatLoyaltyCurrency(
  * @returns Formatted currency string
  */
 export function formatStoreCurrency(
-  amount: number,
+  amount: number | undefined | null,
   options?: {
     showSymbol?: boolean;
     decimals?: number;
@@ -56,7 +59,10 @@ export function formatStoreCurrency(
   const symbol = settings.currency.symbol;
   const position = settings.currency.position;
   
-  const formattedAmount = amount.toLocaleString('en-US', {
+  // Handle invalid amounts
+  const validAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  
+  const formattedAmount = validAmount.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -133,12 +139,15 @@ export function getEarningRate(): number {
  * @returns Formatted currency string
  */
 export function formatCurrency(
-  amount: number,
+  amount: number | undefined | null,
   symbolOrConfig: string | CurrencyConfig,
   position?: 'before' | 'after',
   decimals: number = 2
 ): string {
-  const formattedAmount = amount.toLocaleString('en-US', {
+  // Handle invalid amounts
+  const validAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
+  
+  const formattedAmount = validAmount.toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });

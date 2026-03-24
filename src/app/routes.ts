@@ -39,6 +39,8 @@ import { UnifiedControlPanel } from './pages/UnifiedControlPanel';
 
 // Developer Tools
 import { DevTools } from './pages/DevTools';
+import { TestSessionResetPage } from './pages/TestSessionResetPage';
+import { OrderManagementPage } from './pages/OrderManagementPage';
 
 // Manager Pages (still accessible from control panel)
 import { ManagerMenuManagement } from './pages/manager/ManagerMenuManagement';
@@ -76,6 +78,10 @@ import { AdminLoyaltySettings } from './pages/admin/AdminLoyaltySettings';
 import { StyleGuidePage } from './pages/admin/StyleGuidePage';
 import { AdminCurrency } from './pages/admin/AdminCurrency';
 
+// Control Panel Pages
+import { RatingsManagementPage } from './pages/control-panel/RatingsManagementPage';
+import { SupportMessagesPage } from './pages/control-panel/SupportMessagesPage';
+
 // Loyalty & Promotions Additions
 import {
   BranchListPage,
@@ -106,9 +112,22 @@ export const router = createBrowserRouter([
         Component: UnifiedControlPanel,
       },
       {
+        path: 'control-panel/ratings',
+        Component: RatingsManagementPage,
+      },
+      {
+        path: 'control-panel/support-messages',
+        Component: SupportMessagesPage,
+      },
+      {
         path: 'dev-tools',
         Component: DevTools,
       },
+      {
+        path: 'test-session-reset',
+        Component: TestSessionResetPage,
+      },
+      // Removed duplicate OrderManagementPage - now only in MobileLayout
       {
         path: 'admin',
         children: [
@@ -257,6 +276,12 @@ export const router = createBrowserRouter([
           {
             path: 'my-orders',
             Component: MyOrdersPage,
+          },
+          
+          // Order Management (accessible from anywhere)
+          {
+            path: 'order-management',
+            Component: OrderManagementPage,
           },
           
           // Loyalty & Promotions Additions

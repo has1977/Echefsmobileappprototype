@@ -1,10 +1,11 @@
-import { Outlet, useLocation } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { TopNav, BottomNav } from '../design-system';
 import { useApp } from '../contexts/AppContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { Home, UtensilsCrossed, ShoppingCart, Gift, User } from 'lucide-react';
+import { Home, UtensilsCrossed, ShoppingCart, Gift, User, ClipboardList } from 'lucide-react';
 import { Suspense } from 'react';
 import { ActiveOrdersButton } from '../components/ActiveOrdersButton';
+import { Button } from '../components/ui/button';
 
 // Pages that should show the bottom navigation
 const PAGES_WITH_BOTTOM_NAV = [
@@ -32,6 +33,7 @@ const FULL_SCREEN_PAGES = [
 export function MobileLayout() {
   console.log('🟣 MobileLayout rendering - about to call useApp()');
   const location = useLocation();
+  const navigate = useNavigate();
   const { cart, currentBranch, currentLanguage, changeLanguage, languages } = useApp();
   const { favoritesCount } = useFavorites();
   console.log('✅ MobileLayout successfully got context from useApp()');
@@ -131,6 +133,15 @@ export function MobileLayout() {
       
       {/* Floating Active Orders Button */}
       <ActiveOrdersButton />
+      
+      {/* Floating Order Management Button */}
+      <Button
+        onClick={() => navigate('/order-management')}
+        className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full shadow-lg bg-gradient-to-br from-[#667c67] to-[#526250] hover:shadow-xl text-white p-0 flex items-center justify-center transition-all"
+        title="Order Management"
+      >
+        <ClipboardList className="w-6 h-6" />
+      </Button>
     </div>
   );
 }

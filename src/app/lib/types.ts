@@ -136,11 +136,13 @@ export interface OrderItem {
   id: string;
   menuItemId: string;
   menuItem?: MenuItem; // Populated from menu
+  name?: string | Record<string, string>; // Direct name (for test orders) or translations object
   quantity: number;
   modifiers: SelectedModifier[];
   price: number;
   notes?: string;
   status?: 'pending' | 'preparing' | 'ready' | 'served';
+  image?: string; // For displaying item image
 }
 
 export interface SelectedModifier {

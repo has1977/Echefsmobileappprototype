@@ -19,6 +19,19 @@ export function AdminOrders() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterBranch, setFilterBranch] = useState<string>('all');
 
+  // Helper to get item name from translations or string
+  const getItemName = (item: any): string => {
+    if (!item.name) return 'Item';
+    if (typeof item.name === 'string') return item.name;
+    if (typeof item.name === 'object' && item.name.en) {
+      return item.name.en;
+    }
+    if (typeof item.name === 'object') {
+      return item.name[Object.keys(item.name)[0]] || 'Item';
+    }
+    return 'Item';
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchesSearch = 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -220,7 +233,7 @@ export function AdminOrders() {
                         {order.items.map((item) => (
                           <div key={item.id} className="flex justify-between text-sm">
                             <span className="text-gray-600">
-                              {item.quantity}x {item.name}
+                              {item.quantity}x {getItemName(item)}
                             </span>
                             <span className="font-semibold">${item.total.toFixed(2)}</span>
                           </div>

@@ -67,6 +67,7 @@ interface AppContextType {
   removeFromCart: (itemId: string) => void;
   updateCartItemQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  resetOrderSession: () => void;
   cartSubtotal: number;
   cartTax: number;
   cartTotal: number;
@@ -193,6 +194,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // Clean up cart on mount - remove any invalid items
+  useEffect(() => {
+    setCart(prevCart => {
+      const validCart = prevCart.filter(item => {
+        // Check if item has menuItem property
+        if (!item.menuItem) {
+          console.warn('Removing invalid cart item (missing menuItem):', item);
+          return false;
+        }
+        return true;
+      });
+      
+      // If cart changed, log it
+      if (validCart.length !== prevCart.length) {
+        console.log(`🧹 Cleaned cart: removed ${prevCart.length - validCart.length} invalid items`);
+      }
+      
+      return validCart;
+    });
+  }, []); // Run once on mount
+
   const isRTL = currentLanguage === 'ar';
 
   const changeLanguage = (lang: string) => {
@@ -243,6 +265,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addToCart = (item: Omit<CartItem, 'id'>) => {
+    // Validate that item has required menuItem property
+    if (!item.menuItem) {
+      console.error('Cannot add to cart: missing menuItem', item);
+      return;
+    }
+    
+    // Ensure quantity is valid
+    const quantity = item.quantity && item.quantity > 0 ? item.quantity : 1;
+    
     setCart(prevCart => {
       // Check if item with same modifiers exists
       const existingItemIndex = prevCart.findIndex(
@@ -254,11 +285,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (existingItemIndex > -1) {
         // Update quantity
         const newCart = [...prevCart];
-        newCart[existingItemIndex].quantity += item.quantity;
+        newCart[existingItemIndex].quantity += quantity;
         return newCart;
       } else {
-        // Add new item
-        return [...prevCart, { ...item, id: `cart_${Date.now()}_${Math.random()}` }];
+        // Add new item with validated data
+        return [...prevCart, { 
+          ...item, 
+          quantity,
+          id: `cart_${Date.now()}_${Math.random()}` 
+        }];
       }
     });
   };
@@ -282,6 +317,23 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const clearCart = () => {
     setCart([]);
+  };
+
+  // Reset order session - clear all order-related state
+  const resetOrderSession = () => {
+    setCart([]);
+    setSelectedTable(null);
+    setSelectedRegion(null);
+    setDeliveryAddress(null);
+    setPickupTime(null);
+    setAppliedPromotion(null);
+    setCurrentOrder(null);
+    
+    // Clear from localStorage
+    localStorage.removeItem('echefs_table');
+    localStorage.removeItem('echefs_region');
+    
+    console.log('✅ Order session reset - ready for new order');
   };
 
   // Calculate cart totals
@@ -435,6 +487,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     removeFromCart,
     updateCartItemQuantity,
     clearCart,
+    resetOrderSession,
     cartSubtotal,
     cartTax,
     cartTotal,

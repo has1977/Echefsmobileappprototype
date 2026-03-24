@@ -39,6 +39,31 @@ export function UnifiedControlPanel() {
   const isKitchen = user?.role === 'kitchen';
   const isWaiter = user?.role === 'waiter';
 
+  // Support Messages Helper Functions
+  const getSupportMessagesStats = () => {
+    const savedMessages = localStorage.getItem('echefs_support_messages');
+    if (!savedMessages) return '0 messages';
+    
+    const messages = JSON.parse(savedMessages);
+    const messagesList = Object.values(messages) as any[];
+    const total = messagesList.length;
+    const newCount = messagesList.filter((m: any) => m.status === 'new').length;
+    
+    if (newCount > 0) {
+      return `${newCount} new`;
+    }
+    return `${total} total`;
+  };
+
+  const getNewMessagesCount = () => {
+    const savedMessages = localStorage.getItem('echefs_support_messages');
+    if (!savedMessages) return 0;
+    
+    const messages = JSON.parse(savedMessages);
+    const messagesList = Object.values(messages) as any[];
+    return messagesList.filter((m: any) => m.status === 'new').length;
+  };
+
   // Comprehensive real-time statistics
   const stats = {
     // Revenue & Financial
@@ -331,6 +356,25 @@ export function UnifiedControlPanel() {
           path: '/admin/inventory',
           stats: 'Auto-reorder enabled',
           badge: 'New',
+        },
+        {
+          id: 'ratings',
+          title: 'Ratings & Reviews',
+          description: 'Manage customer feedback',
+          icon: Star,
+          color: 'from-yellow-500 to-orange-600',
+          path: '/control-panel/ratings',
+          stats: `${stats.avgRating}★ avg`,
+        },
+        {
+          id: 'support-messages',
+          title: 'Support Messages',
+          description: 'Customer inquiries & issues',
+          icon: MessageSquare,
+          color: 'from-blue-500 to-cyan-600',
+          path: '/control-panel/support-messages',
+          stats: getSupportMessagesStats(),
+          badge: getNewMessagesCount() > 0 ? 'New' : undefined,
         }
       );
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { useApp } from '../contexts/AppContext';
 import { db } from '../lib/database';
 import { motion, AnimatePresence } from 'motion/react';
 import { Package, X, ChevronRight } from 'lucide-react';
@@ -11,6 +12,7 @@ export function ActiveOrdersButton() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { currentLanguage } = useApp();
   const [activeOrders, setActiveOrders] = useState<Order[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -153,7 +155,12 @@ export function ActiveOrdersButton() {
             {/* Items Preview */}
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-700 line-clamp-2">
-                {latestOrder.items.map(item => `${item.quantity}x ${item.menuItem.name}`).join(', ')}
+                {latestOrder.items.map(item => {
+                  const itemName = item.menuItem?.translations?.[currentLanguage]?.name || 
+                                   item.menuItem?.translations?.en?.name || 
+                                   'Item';
+                  return `${item.quantity}x ${itemName}`;
+                }).join(', ')}
               </p>
             </div>
 

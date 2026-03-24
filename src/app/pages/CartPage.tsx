@@ -8,7 +8,7 @@ import {
   UtensilsCrossed, Truck, MapPin, Clock, Tag, Star, Sparkles, 
   Gift, Percent, AlertCircle, X, TrendingUp, Zap, Info
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { promotions } from '../services/promotionsData';
 import { getBranchPromotions } from '../services/branchLoyaltyData';
 import { useLoyaltyCurrency, useEarningRate, useStoreCurrency } from '../hooks/useCurrency';
@@ -47,6 +47,16 @@ export function CartPage() {
   const loyaltyCurrency = useLoyaltyCurrency();
   const earningRate = useEarningRate();
 
+  // Clean invalid cart items on mount
+  useEffect(() => {
+    cart.forEach(item => {
+      if (!item.menuItem) {
+        console.warn('Removing invalid cart item:', item);
+        removeFromCart(item.id);
+      }
+    });
+  }, []); // Run once on mount
+
   const translations = {
     en: {
       title: 'Shopping Cart',
@@ -79,7 +89,7 @@ export function CartPage() {
     ar: {
       title: 'سلة التسوق',
       empty: 'سلتك فارغة',
-      emptyDesc: 'أضف بعض الأصناف اللذيذة للبدء',
+      emptyDesc: 'أضف بعض الأصناف الليذة للبدء',
       subtotal: 'المجموع الفرعي',
       tax: 'الضرائب والرسوم',
       total: 'المجموع',
@@ -139,7 +149,7 @@ export function CartPage() {
       subtotal: 'Жалпы сумма',
       tax: 'Салыктар жана алымдар',
       total: 'Жыйынтык',
-      checkout: 'Буйруткону бүтүрүү',
+      checkout: 'Буйруткону бүтүрү��',
       continueShopping: 'Сатып алууну улантуу',
       orderType: 'Заказ түрү',
       dineIn: 'Ресторанда',
@@ -352,11 +362,22 @@ export function CartPage() {
 
             {/* Cart Items */}
             <AnimatePresence mode="popLayout">
-              {cart.map((item, index) => (
+              {cart.map((item, index) => {
+                // Safety check - skip items with missing menuItem or invalid data
+                if (!item.menuItem) {
+                  console.warn('Cart item missing menuItem:', item);
+                  return null;
+                }
+                
+                // Ensure we have valid quantity and price
+                const quantity = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+                const price = typeof item.price === 'number' && item.price > 0 ? item.price : 0;
+                
+                return (
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ 
                     opacity: deletingItemId === item.id ? 0 : 1, 
                     x: deletingItemId === item.id ? -100 : 0,
@@ -369,11 +390,11 @@ export function CartPage() {
                     <div className="flex gap-4 p-5">
                       <div className="relative group">
                         <img
-                          src={item.menuItem.imageUrl}
-                          alt={item.menuItem.translations[currentLanguage]?.name}
+                          src={item.menuItem?.imageUrl || item.menuItem?.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}
+                          alt={item.menuItem?.translations?.[currentLanguage]?.name || 'Item'}
                           className="w-28 h-28 object-cover rounded-xl flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform"
                         />
-                        {item.menuItem.isPopular && (
+                        {item.menuItem?.isPopular && (
                           <Badge className="absolute top-2 left-2 bg-orange-500 text-white border-0 text-xs">
                             <TrendingUp className="w-3 h-3 mr-1" />
                             Popular
@@ -383,7 +404,7 @@ export function CartPage() {
                       
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-lg mb-1.5 line-clamp-2 text-gray-900">
-                          {item.menuItem.translations[currentLanguage]?.name}
+                          {item.menuItem?.translations?.[currentLanguage]?.name || 'Item'}
                         </h3>
                         
                         {/* Modifiers */}
@@ -392,7 +413,7 @@ export function CartPage() {
                             <Info className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
                             <p className="text-xs text-gray-600 line-clamp-2">
                               {item.modifiers.map(m => {
-                                const modifier = item.menuItem.modifiers.find(mod => mod.id === m.modifierId);
+                                const modifier = item.menuItem?.modifiers?.find(mod => mod.id === m.modifierId);
                                 const option = modifier?.options.find(opt => opt.id === m.optionId);
                                 return option?.translations[currentLanguage];
                               }).filter(Boolean).join(', ')}
@@ -410,10 +431,10 @@ export function CartPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="font-bold text-[#667c67] text-2xl">
-                              {formatStoreCurrency(item.price * item.quantity)}
+                              {formatStoreCurrency(price * quantity)}
                             </span>
                             <p className="text-xs text-gray-500 mt-0.5">
-                              {formatStoreCurrency(item.price)} each
+                              {formatStoreCurrency(price)} each
                             </p>
                           </div>
                         </div>
@@ -428,23 +449,23 @@ export function CartPage() {
                           variant="outline"
                           size="icon"
                           className="h-10 w-10 rounded-full border-2 border-gray-300 hover:border-[#667c67] hover:bg-[#667c67] hover:text-white transition-all"
-                          onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateCartItemQuantity(item.id, quantity - 1)}
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
                         <motion.span 
-                          key={item.quantity}
+                          key={quantity}
                           initial={{ scale: 1.3 }}
                           animate={{ scale: 1 }}
                           className="w-12 text-center font-bold text-xl"
                         >
-                          {item.quantity}
+                          {quantity}
                         </motion.span>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-10 w-10 rounded-full border-2 border-gray-300 hover:border-[#667c67] hover:bg-[#667c67] hover:text-white transition-all"
-                          onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateCartItemQuantity(item.id, quantity + 1)}
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -461,7 +482,8 @@ export function CartPage() {
                     </div>
                   </Card>
                 </motion.div>
-              ))}
+                );
+              })}
             </AnimatePresence>
           </div>
 

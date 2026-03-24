@@ -29,6 +29,7 @@ interface CheckInContextValue {
   approveRequest: (requestId: string, staffId: string, staffName: string) => void;
   denyRequest: (requestId: string, staffId: string, staffName: string, reason?: string) => void;
   retryRequest: () => void;
+  resetCheckIn: () => void;
   getDeviceId: () => string;
   tokenTTL: number;
   setTokenTTL: (ttl: number) => void;
@@ -195,6 +196,12 @@ export function CheckInProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetCheckIn = () => {
+    if (pollingInterval) clearInterval(pollingInterval);
+    setCurrentRequest(null);
+    setActiveRequests([]);
+  };
+
   const getDeviceId = () => deviceId;
 
   return (
@@ -207,6 +214,7 @@ export function CheckInProvider({ children }: { children: ReactNode }) {
         approveRequest,
         denyRequest,
         retryRequest,
+        resetCheckIn,
         getDeviceId,
         tokenTTL,
         setTokenTTL,

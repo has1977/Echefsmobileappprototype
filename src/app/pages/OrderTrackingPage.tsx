@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useApp } from '../contexts/AppContext';
+import { useCheckIn } from '../contexts/CheckInContext';
 import { db } from '../lib/database';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { SmartOrderTracking } from '../components/SmartOrderTracking';
 import { motion } from 'motion/react';
 import { 
   ChevronLeft, MapPin, Clock, User, Phone, CheckCircle, 
   Package, Truck, UtensilsCrossed, Star, MessageSquare,
-  Home, RefreshCw
+  Home, RefreshCw, ShoppingBag
 } from 'lucide-react';
 import type { Order } from '../lib/types';
 
 export function OrderTrackingPage() {
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { orders, currentLanguage, selectedBranch, updateOrderStatus } = useApp();
+  const { orders, currentLanguage, selectedBranch, updateOrderStatus, resetOrderSession } = useApp();
+  const { resetCheckIn } = useCheckIn();
   const [order, setOrder] = useState<Order | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -61,6 +64,15 @@ export function OrderTrackingPage() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  const handleOrderAgain = () => {
+    // Reset all order-related session data
+    resetOrderSession();
+    resetCheckIn();
+    
+    // Navigate to branch selection for fresh start
+    navigate('/branch-selection');
+  };
+
   const translations = {
     en: {
       title: 'Order Tracking',
@@ -98,6 +110,7 @@ export function OrderTrackingPage() {
       branch: 'Branch',
       myOrders: 'My Orders',
       viewAllOrders: 'View All Orders',
+      orderAgain: 'Order Again',
     },
     ar: {
       title: 'تتبع الطلب',
@@ -135,6 +148,7 @@ export function OrderTrackingPage() {
       branch: 'الفرع',
       myOrders: 'طلباتي',
       viewAllOrders: 'عرض جميع الطلبات',
+      orderAgain: 'اطلب مرة أخرى',
     },
     ru: {
       title: 'Отслеживание заказа',
@@ -172,6 +186,7 @@ export function OrderTrackingPage() {
       branch: 'Филиал',
       myOrders: 'Мои заказы',
       viewAllOrders: 'Смотреть все заказы',
+      orderAgain: 'Заказать снова',
     },
     ky: {
       title: 'Буйруткону көзөмөлдөө',
@@ -209,6 +224,7 @@ export function OrderTrackingPage() {
       branch: 'Филиал',
       myOrders: 'Менин буйрутмаларым',
       viewAllOrders: 'Бардык буйрутмаларды көрүү',
+      orderAgain: 'Кайра буйрутуу',
     },
   };
 
@@ -452,18 +468,43 @@ export function OrderTrackingPage() {
           <h3 className="font-semibold">{t.orderSummary}</h3>
           
           <div className="space-y-3">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <div className="flex-1">
-                  <span className="font-medium">{item.quantity}x</span>
-                  <span className="ml-2">Item {item.menuItemId.slice(0, 8)}</span>
-                  {item.notes && (
-                    <p className="text-xs text-muted-foreground ml-6">{item.notes}</p>
-                  )}
+            {order.items.map((item) => {
+              // Helper to get item name from different sources
+              const getItemName = () => {
+                // If item has a direct name and it's a string, use it
+                if (item.name && typeof item.name === 'string') {
+                  return item.name;
+                }
+                
+                // If item.name is a translations object
+                if (item.name && typeof item.name === 'object') {
+                  return (item.name as any)[currentLanguage] || (item.name as any)['en'] || 'Unknown Item';
+                }
+                
+                // If menuItem exists with translations
+                if (item.menuItem?.translations) {
+                  return item.menuItem.translations[currentLanguage]?.name || 
+                         item.menuItem.translations.en?.name || 
+                         'Unknown Item';
+                }
+                
+                // Fallback
+                return `Item ${item.menuItemId?.slice(0, 8) || item.id}`;
+              };
+              
+              return (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <div className="flex-1">
+                    <span className="font-medium">{item.quantity}x</span>
+                    <span className="ml-2">{getItemName()}</span>
+                    {item.notes && (
+                      <p className="text-xs text-muted-foreground ml-6">{item.notes}</p>
+                    )}
+                  </div>
+                  <span className="font-medium">${item.price.toFixed(2)}</span>
                 </div>
-                <span className="font-medium">${item.price.toFixed(2)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="border-t pt-3 space-y-2 text-sm">
@@ -515,14 +556,36 @@ export function OrderTrackingPage() {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg z-20">
-        <Button
-          onClick={() => navigate('/branch-selection')}
-          size="lg"
-          className="w-full bg-[#667c67] hover:bg-[#526250]"
-        >
-          <Home className="w-5 h-5 mr-2" />
-          {t.goHome}
-        </Button>
+        {order.status === 'completed' || order.status === 'cancelled' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              onClick={() => navigate('/branch-selection')}
+              variant="outline"
+              size="lg"
+              className="gap-2"
+            >
+              <Home className="w-5 h-5" />
+              {t.goHome}
+            </Button>
+            <Button
+              onClick={handleOrderAgain}
+              size="lg"
+              className="bg-[#667c67] hover:bg-[#526250] gap-2"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {t.orderAgain}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => navigate('/branch-selection')}
+            size="lg"
+            className="w-full bg-[#667c67] hover:bg-[#526250]"
+          >
+            <Home className="w-5 h-5 mr-2" />
+            {t.goHome}
+          </Button>
+        )}
       </div>
     </div>
   );

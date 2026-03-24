@@ -10,6 +10,8 @@ import {
   Heart, Share2, AlertCircle, Check, ShoppingCart, X, Info
 } from 'lucide-react';
 import type { SelectedModifier } from '../lib/types';
+import { RatingsSection } from '../components/ratings/RatingsSection';
+import { AddRatingButton } from '../components/ratings/AddRatingButton';
 
 export function MenuItemDetailPage() {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ export function MenuItemDetailPage() {
   const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifier[]>([]);
   const [notes, setNotes] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [refreshRatings, setRefreshRatings] = useState(0);
 
   const item = menuItems.find(i => i.id === itemId);
   const isRTL = currentLanguage === 'ar';
@@ -440,6 +443,35 @@ export function MenuItemDetailPage() {
             )}
           </motion.div>
         )}
+
+        {/* Ratings Section */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mb-6"
+        >
+          <RatingsSection 
+            itemId={itemId || ''} 
+            currentLanguage={currentLanguage}
+            refreshTrigger={refreshRatings}
+          />
+        </motion.div>
+
+        {/* Add Rating Button */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mb-6"
+        >
+          <AddRatingButton 
+            itemId={itemId || ''}
+            itemName={item.translations[currentLanguage]?.name || item.translations['en']?.name || 'Item'}
+            currentLanguage={currentLanguage}
+            onRatingAdded={() => setRefreshRatings(prev => prev + 1)}
+          />
+        </motion.div>
       </div>
 
       {/* Bottom Bar */}
