@@ -1,6 +1,7 @@
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { useId } from 'react';
 import {
   LineChart,
   Line,
@@ -38,6 +39,7 @@ export function RevenueChart({
   chartType = 'area',
 }: RevenueChartProps) {
   const isPositiveGrowth = growth !== undefined && growth >= 0;
+  const gradientId = useId(); // Generate unique ID for gradient
 
   // Ensure data is always an array
   const chartData = Array.isArray(data) ? data : [];
@@ -109,7 +111,7 @@ export function RevenueChart({
           {chartType === 'area' ? (
             <AreaChart data={chartData}>
               <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#667c67" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#667c67" stopOpacity={0} />
                 </linearGradient>
@@ -133,7 +135,7 @@ export function RevenueChart({
                 dataKey="revenue"
                 stroke="#667c67"
                 strokeWidth={2}
-                fill="url(#revenueGradient)"
+                fill={`url(#${gradientId})`}
               />
             </AreaChart>
           ) : (

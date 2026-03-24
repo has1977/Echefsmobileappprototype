@@ -9,10 +9,10 @@ import { Label } from '../../components/ui/label';
 import { Switch } from '../../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { ChevronLeft, Plus, Edit, Trash2, Globe, Sparkles } from 'lucide-react';
+import { ChevronLeft, Plus, Edit, Trash2, Globe, Sparkles, Check, Languages, ArrowLeftRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { Language } from '../../lib/types';
 
 // Popular language presets
@@ -142,337 +142,493 @@ export function AdminLanguages() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <div className="bg-[#667c67] text-white p-4 sticky top-0 z-10 shadow-md">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/20"
-              onClick={() => navigate('/admin')}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold">Language Management</h1>
-              <p className="text-sm text-white/80">Configure available languages</p>
-            </div>
-          </div>
-          
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Language
+      <div className="bg-gradient-to-r from-[#667c67] to-[#526250] text-white sticky top-0 z-10 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-white/20 transition-colors"
+                onClick={() => navigate('/admin')}
+              >
+                <ChevronLeft className="w-6 h-6" />
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Language</DialogTitle>
-                <DialogDescription>
-                  Choose from popular presets or create a custom language
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                {/* Language Presets */}
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Globe className="w-7 h-7 text-white" />
+                </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-[#667c67]" />
-                    <Label>Quick Select Popular Languages</Label>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 max-h-[200px] overflow-y-auto p-2 border rounded-lg bg-gray-50">
-                    {LANGUAGE_PRESETS.map((preset) => {
-                      const alreadyExists = languages.some(l => l.code === preset.code);
-                      return (
-                        <button
-                          key={preset.code}
-                          onClick={() => !alreadyExists && handlePresetSelect(preset.code)}
-                          disabled={alreadyExists}
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            formData.code === preset.code
-                              ? 'border-[#667c67] bg-[#667c67]/10'
-                              : alreadyExists
-                              ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
-                              : 'border-gray-200 hover:border-[#667c67] hover:bg-white'
-                          }`}
-                        >
-                          <div className="text-2xl mb-1">{preset.flag}</div>
-                          <div className="text-xs font-medium text-gray-700">{preset.name}</div>
-                          {alreadyExists && (
-                            <Badge variant="outline" className="mt-1 text-xs">Added</Badge>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or enter manually</span>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="code">Language Code *</Label>
-                  <Input
-                    id="code"
-                    placeholder="en, ar, ru, etc."
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    disabled={usePreset}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="name">English Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="English"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="nativeName">Native Name *</Label>
-                  <Input
-                    id="nativeName"
-                    placeholder="English"
-                    value={formData.nativeName}
-                    onChange={(e) => setFormData({ ...formData, nativeName: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="flag">Flag Emoji</Label>
-                  <Input
-                    id="flag"
-                    placeholder="🇬🇧"
-                    value={formData.flag}
-                    onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="direction">Text Direction</Label>
-                  <Select
-                    value={formData.direction}
-                    onValueChange={(value: 'ltr' | 'rtl') => setFormData({ ...formData, direction: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ltr">Left to Right (LTR)</SelectItem>
-                      <SelectItem value="rtl">Right to Left (RTL)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex gap-2 pt-4">
-                  <Button onClick={handleAdd} className="flex-1 bg-green-600 text-white hover:bg-green-700 font-semibold">
-                    Add Language
-                  </Button>
-                  <Button variant="outline" onClick={() => { setIsAddDialogOpen(false); resetForm(); }} className="hover:bg-gray-100">
-                    Cancel
-                  </Button>
+                  <h1 className="text-2xl font-bold">Language Management</h1>
+                  <p className="text-sm text-white/80">Configure multi-language support for your platform</p>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </div>
+            
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-white text-[#667c67] hover:bg-white/90 font-semibold shadow-lg h-11 px-6">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Language
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="space-y-3">
+                  <DialogTitle className="text-2xl flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-[#667c67]" />
+                    Add New Language
+                  </DialogTitle>
+                  <DialogDescription className="text-base">
+                    Choose from our curated list of popular languages or create a custom one
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-6 pt-4">
+                  {/* Language Presets */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-[#667c67] to-[#526250] rounded-lg flex items-center justify-center">
+                        <Languages className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <Label className="text-base font-semibold">Popular Languages</Label>
+                        <p className="text-sm text-muted-foreground">Click to quickly add a language</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-3 p-4 border-2 border-dashed rounded-xl bg-gradient-to-br from-gray-50 to-white max-h-[280px] overflow-y-auto">
+                      {LANGUAGE_PRESETS.map((preset) => {
+                        const alreadyExists = languages.some(l => l.code === preset.code);
+                        const isSelected = formData.code === preset.code;
+                        return (
+                          <motion.button
+                            key={preset.code}
+                            whileHover={!alreadyExists ? { scale: 1.05 } : {}}
+                            whileTap={!alreadyExists ? { scale: 0.95 } : {}}
+                            onClick={() => !alreadyExists && handlePresetSelect(preset.code)}
+                            disabled={alreadyExists}
+                            className={`relative p-4 rounded-xl border-2 transition-all ${
+                              isSelected
+                                ? 'border-[#667c67] bg-[#667c67]/10 shadow-md'
+                                : alreadyExists
+                                ? 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                                : 'border-gray-200 hover:border-[#667c67]/50 hover:bg-white hover:shadow-md'
+                            }`}
+                          >
+                            <div className="text-3xl mb-2">{preset.flag}</div>
+                            <div className="text-sm font-semibold text-gray-900">{preset.name}</div>
+                            <div className="text-xs text-gray-500 mt-1">{preset.nativeName}</div>
+                            {alreadyExists && (
+                              <Badge variant="secondary" className="mt-2 text-xs">
+                                <Check className="w-3 h-3 mr-1" />
+                                Added
+                              </Badge>
+                            )}
+                            {isSelected && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-[#667c67] rounded-full flex items-center justify-center shadow-lg"
+                              >
+                                <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                              </motion.div>
+                            )}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm uppercase">
+                      <span className="bg-white px-3 py-1 text-muted-foreground font-medium rounded-full border">
+                        Or enter custom details
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Manual Input Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="code" className="text-sm font-semibold flex items-center gap-1">
+                        Language Code <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="code"
+                        placeholder="e.g., en, ar, ru"
+                        value={formData.code}
+                        onChange={(e) => setFormData({ ...formData, code: e.target.value.toLowerCase() })}
+                        disabled={usePreset}
+                        className="h-11"
+                      />
+                      <p className="text-xs text-muted-foreground">ISO 639-1 code (2 letters)</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-sm font-semibold flex items-center gap-1">
+                        English Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="name"
+                        placeholder="e.g., English"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="h-11"
+                      />
+                      <p className="text-xs text-muted-foreground">Name in English</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nativeName" className="text-sm font-semibold flex items-center gap-1">
+                        Native Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="nativeName"
+                        placeholder="e.g., English"
+                        value={formData.nativeName}
+                        onChange={(e) => setFormData({ ...formData, nativeName: e.target.value })}
+                        className="h-11"
+                      />
+                      <p className="text-xs text-muted-foreground">Name in native language</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="flag" className="text-sm font-semibold">
+                        Flag Emoji
+                      </Label>
+                      <Input
+                        id="flag"
+                        placeholder="e.g., 🇬🇧"
+                        value={formData.flag}
+                        onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
+                        className="h-11 text-2xl"
+                      />
+                      <p className="text-xs text-muted-foreground">Country flag emoji</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="direction" className="text-sm font-semibold flex items-center gap-2">
+                      <ArrowLeftRight className="w-4 h-4 text-[#667c67]" />
+                      Text Direction
+                    </Label>
+                    <Select
+                      value={formData.direction}
+                      onValueChange={(value: 'ltr' | 'rtl') => setFormData({ ...formData, direction: value })}
+                    >
+                      <SelectTrigger className="h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ltr">
+                          <div className="flex items-center gap-2">
+                            <span>→</span>
+                            <span>Left to Right (LTR)</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="rtl">
+                          <div className="flex items-center gap-2">
+                            <span>←</span>
+                            <span>Right to Left (RTL)</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-6 border-t">
+                    <Button 
+                      onClick={handleAdd} 
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 font-semibold h-12 shadow-lg"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Add Language
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => { setIsAddDialogOpen(false); resetForm(); }} 
+                      className="hover:bg-gray-100 h-12 px-6"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4 space-y-6">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Globe className="w-8 h-8 text-[#667c67]" />
-                <div>
-                  <div className="text-2xl font-bold">{languages.length}</div>
-                  <div className="text-sm text-muted-foreground">Total Languages</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-success rounded-full"></div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-success">
-                    {languages.filter(l => l.enabled).length}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#667c67] to-[#526250] rounded-xl flex items-center justify-center shadow-md">
+                    <Globe className="w-7 h-7 text-white" />
                   </div>
-                  <div className="text-sm text-muted-foreground">Enabled</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-muted-foreground rounded-full"></div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-muted-foreground">
-                    {languages.filter(l => !l.enabled).length}
+                  <div>
+                    <div className="text-3xl font-bold text-gray-900">{languages.length}</div>
+                    <div className="text-sm font-medium text-gray-600">Total Languages</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">Disabled</div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+                    <Check className="w-7 h-7 text-white" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-green-700">
+                      {languages.filter(l => l.enabled).length}
+                    </div>
+                    <div className="text-sm font-medium text-green-600">Active Languages</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-slate-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-md">
+                    <div className="w-3 h-3 bg-white rounded-full"></div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-gray-700">
+                      {languages.filter(l => !l.enabled).length}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600">Inactive Languages</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Languages Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Languages</CardTitle>
-            <CardDescription>Manage application languages and translations</CardDescription>
+        {/* Languages Grid */}
+        <Card className="border-0 shadow-xl">
+          <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-white pb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl">Configured Languages</CardTitle>
+                <CardDescription className="text-base mt-1">
+                  Manage application languages and translation settings
+                </CardDescription>
+              </div>
+              <Badge variant="secondary" className="px-3 py-1 text-sm">
+                {languages.length} {languages.length === 1 ? 'Language' : 'Languages'}
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Flag</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Native Name</TableHead>
-                  <TableHead>Direction</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {languages.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      No languages configured
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  languages.map((lang) => (
-                    <TableRow key={lang.code}>
-                      <TableCell className="text-2xl">{lang.flag}</TableCell>
-                      <TableCell className="font-mono">{lang.code}</TableCell>
-                      <TableCell>{lang.name}</TableCell>
-                      <TableCell>{lang.nativeName}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {lang.direction.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={lang.enabled}
-                          onCheckedChange={(checked) => handleToggle(lang.code, checked)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Dialog open={editingLang?.code === lang.code} onOpenChange={(open) => !open && resetForm()}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => startEdit(lang)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Language</DialogTitle>
-                                <DialogDescription>
-                                  Update language settings
-                                </DialogDescription>
-                              </DialogHeader>
-                              
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="edit-name">English Name *</Label>
-                                  <Input
-                                    id="edit-name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <Label htmlFor="edit-nativeName">Native Name *</Label>
-                                  <Input
-                                    id="edit-nativeName"
-                                    value={formData.nativeName}
-                                    onChange={(e) => setFormData({ ...formData, nativeName: e.target.value })}
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <Label htmlFor="edit-flag">Flag Emoji</Label>
-                                  <Input
-                                    id="edit-flag"
-                                    value={formData.flag}
-                                    onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <Label htmlFor="edit-direction">Text Direction</Label>
-                                  <Select
-                                    value={formData.direction}
-                                    onValueChange={(value: 'ltr' | 'rtl') => setFormData({ ...formData, direction: value })}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="ltr">Left to Right (LTR)</SelectItem>
-                                      <SelectItem value="rtl">Right to Left (RTL)</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                
-                                <div className="flex gap-2 pt-4">
-                                  <Button onClick={handleUpdate} className="flex-1 bg-orange-600 text-white hover:bg-orange-700 font-semibold">
-                                    Update Language
-                                  </Button>
-                                  <Button variant="outline" onClick={() => { setEditingLang(null); resetForm(); }} className="hover:bg-gray-100">
-                                    Cancel
-                                  </Button>
+          <CardContent className="p-6">
+            {languages.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Globe className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No languages configured</h3>
+                <p className="text-gray-600 mb-6">Get started by adding your first language</p>
+                <Button
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="bg-[#667c67] hover:bg-[#526250]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Language
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AnimatePresence>
+                  {languages.map((lang, index) => (
+                    <motion.div
+                      key={lang.code}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Card className={`border-2 transition-all hover:shadow-lg ${
+                        lang.enabled ? 'border-green-200 bg-gradient-to-br from-white to-green-50/30' : 'border-gray-200 bg-gray-50/50'
+                      }`}>
+                        <CardContent className="p-5">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-4">
+                              <div className="text-5xl">{lang.flag}</div>
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900">{lang.name}</h3>
+                                <p className="text-gray-600">{lang.nativeName}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="outline" className="font-mono text-xs">
+                                    {lang.code}
+                                  </Badge>
+                                  <Badge variant={lang.direction === 'rtl' ? 'secondary' : 'outline'} className="text-xs">
+                                    {lang.direction === 'rtl' ? '← RTL' : 'LTR →'}
+                                  </Badge>
                                 </div>
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(lang.code)}
-                            className="text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={lang.enabled}
+                                onCheckedChange={(checked) => handleToggle(lang.code, checked)}
+                                className="data-[state=checked]:bg-green-600"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t">
+                            <Badge variant={lang.enabled ? 'default' : 'secondary'} className="font-medium">
+                              {lang.enabled ? 'Active' : 'Inactive'}
+                            </Badge>
+                            <div className="flex gap-2">
+                              <Dialog open={editingLang?.code === lang.code} onOpenChange={(open) => !open && resetForm()}>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => startEdit(lang)}
+                                    className="hover:bg-blue-50 hover:text-blue-700"
+                                  >
+                                    <Edit className="w-4 h-4 mr-1" />
+                                    Edit
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                  <DialogHeader className="space-y-3">
+                                    <DialogTitle className="text-2xl flex items-center gap-2">
+                                      <Edit className="w-6 h-6 text-blue-600" />
+                                      Edit Language
+                                    </DialogTitle>
+                                    <DialogDescription className="text-base">
+                                      Update language settings and configuration
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  
+                                  <div className="space-y-5 pt-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="edit-name" className="text-sm font-semibold flex items-center gap-1">
+                                          English Name <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                          id="edit-name"
+                                          value={formData.name}
+                                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                          className="h-11"
+                                        />
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <Label htmlFor="edit-nativeName" className="text-sm font-semibold flex items-center gap-1">
+                                          Native Name <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Input
+                                          id="edit-nativeName"
+                                          value={formData.nativeName}
+                                          onChange={(e) => setFormData({ ...formData, nativeName: e.target.value })}
+                                          className="h-11"
+                                        />
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div className="space-y-2">
+                                        <Label htmlFor="edit-flag" className="text-sm font-semibold">
+                                          Flag Emoji
+                                        </Label>
+                                        <Input
+                                          id="edit-flag"
+                                          value={formData.flag}
+                                          onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
+                                          className="h-11 text-2xl"
+                                        />
+                                      </div>
+                                      
+                                      <div className="space-y-2">
+                                        <Label htmlFor="edit-direction" className="text-sm font-semibold">
+                                          Text Direction
+                                        </Label>
+                                        <Select
+                                          value={formData.direction}
+                                          onValueChange={(value: 'ltr' | 'rtl') => setFormData({ ...formData, direction: value })}
+                                        >
+                                          <SelectTrigger className="h-11">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="ltr">Left to Right (LTR)</SelectItem>
+                                            <SelectItem value="rtl">Right to Left (RTL)</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-3 pt-6 border-t">
+                                      <Button 
+                                        onClick={handleUpdate} 
+                                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 font-semibold h-12"
+                                      >
+                                        <Check className="w-5 h-5 mr-2" />
+                                        Update Language
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        onClick={() => { setEditingLang(null); resetForm(); }} 
+                                        className="hover:bg-gray-100 h-12 px-6"
+                                      >
+                                        Cancel
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                              
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(lang.code)}
+                                className="hover:bg-red-50 hover:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

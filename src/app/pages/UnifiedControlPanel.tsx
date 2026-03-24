@@ -17,7 +17,7 @@ import {
   Zap, Award, Percent, Home, LogOut, User, Eye, Edit2,
   ToggleLeft, ToggleRight, Plus, Filter, Download, Upload,
   ChefHat, TrendingDown, PieChart, MonitorDot, Utensils,
-  MapPin, RefreshCw, ArrowLeft, Menu as MenuIcon
+  MapPin, RefreshCw, ArrowLeft, Menu as MenuIcon, QrCode
 } from 'lucide-react';
 import { RevenueChart } from '../components/analytics/RevenueChart';
 
@@ -252,6 +252,15 @@ export function UnifiedControlPanel() {
           stats: '4 languages',
         },
         {
+          id: 'currency',
+          title: 'Currency Management',
+          description: 'Store & loyalty currencies',
+          icon: DollarSign,
+          color: 'from-emerald-500 to-green-600',
+          path: '/admin/currency',
+          stats: '8 currencies',
+        },
+        {
           id: 'analytics',
           title: 'Advanced Analytics',
           description: 'Deep insights & reports',
@@ -266,6 +275,16 @@ export function UnifiedControlPanel() {
     // Manager actions
     if (isManager) {
       actions.push(
+        {
+          id: 'check-in-dashboard',
+          title: 'Table Check-Ins',
+          description: 'Approve QR/NFC check-in requests',
+          icon: QrCode,
+          color: 'from-[#667c67] to-[#526250]',
+          path: '/staff-check-in-dashboard',
+          stats: 'Real-time',
+          badge: 'New',
+        },
         {
           id: 'menu',
           title: 'Menu Management',
@@ -417,7 +436,7 @@ export function UnifiedControlPanel() {
               </Button>
               <div>
                 <h1 className="text-xl font-bold drop-shadow-sm">Control Panel</h1>
-                <p className="text-sm text-white/80 capitalize">{user?.role} Dashboard</p>
+                <p className="text-sm text-white/80 capitalize">{user?.role} Dashboard {user?.email && `• ${user.email}`}</p>
               </div>
             </div>
 
@@ -1128,6 +1147,17 @@ export function UnifiedControlPanel() {
                         <span className="flex items-center gap-2">
                           <Globe className="w-4 h-4" />
                           Language Management
+                        </span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between"
+                        onClick={() => navigate('/admin/currency')}
+                      >
+                        <span className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Currency Management
                         </span>
                         <ChevronRight className="w-4 h-4" />
                       </Button>

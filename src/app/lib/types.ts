@@ -221,6 +221,7 @@ export interface UserPreferences {
 export interface LoyaltyCard {
   id: string;
   userId: string;
+  branchId?: string; // Branch-specific loyalty card
   points: number;
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   lifetimePoints: number;
@@ -444,6 +445,9 @@ export interface SystemSettings {
   loyalty: {
     enabled: boolean;
     pointsPerDollar: number;
+    currency: string; // Currency code for loyalty program (e.g., 'KGS', 'USD', 'RUB')
+    currencySymbol: string; // Currency symbol (e.g., 'с', '$', '₽')
+    amountPerPoint: number; // Amount of currency needed to earn 1 point (e.g., 100 KGS = 1 point)
     tiers: {
       [tier: string]: {
         minPoints: number;

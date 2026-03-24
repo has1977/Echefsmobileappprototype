@@ -170,6 +170,14 @@ export function AdminDashboard() {
       stats: '4 languages',
     },
     {
+      title: 'Currency Management',
+      description: 'Store & loyalty currencies',
+      icon: DollarSign,
+      path: '/admin/currency',
+      color: 'from-emerald-500 to-green-600',
+      stats: '8 currencies',
+    },
+    {
       title: 'Settings',
       description: 'System configuration',
       icon: Settings,

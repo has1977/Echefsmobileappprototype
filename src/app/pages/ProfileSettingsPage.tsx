@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { useApp } from '../contexts/AppContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Bell, Globe, Moon, Volume2, CheckCircle, Sun } from 'lucide-react';
+import { ArrowLeft, Bell, Globe, Moon, Volume2, CheckCircle, Sun, DollarSign } from 'lucide-react';
 import { GlassCard, Switch } from '../design-system';
 import { toast } from 'sonner';
+import { useDisplayCurrency, getAllCurrencies } from '../hooks/useCurrency';
 
 export function ProfileSettingsPage() {
   const navigate = useNavigate();
   const { user, updateUserPreferences } = useAuth();
   const { currentLanguage, changeLanguage, languages } = useApp();
+  const { displayCurrency, setDisplayCurrency, isCustomCurrency } = useDisplayCurrency();
+  const availableCurrencies = getAllCurrencies();
   
   // Initialize from user preferences if available
   const [notifications, setNotifications] = useState({
@@ -41,6 +44,9 @@ export function ProfileSettingsPage() {
     en: {
       title: 'Settings',
       language: 'Language',
+      currency: 'Display Currency',
+      currencyDesc: 'Choose your preferred currency for prices',
+      currencyNote: 'Note: This is for display only. Payments will be in store currency.',
       notifications: 'Notifications',
       orderUpdates: 'Order Updates',
       promotions: 'Promotions & Offers',
@@ -54,11 +60,15 @@ export function ProfileSettingsPage() {
       sounds: 'Sound Effects',
       settingsSaved: 'Settings saved successfully!',
       languageChanged: 'Language changed!',
+      currencyChanged: 'Currency changed!',
       comingSoon: 'Coming soon',
     },
     ar: {
       title: 'الإعدادات',
       language: 'اللغة',
+      currency: 'عملة العرض',
+      currencyDesc: 'اختر عملتك المفضلة لعرض الأسعار',
+      currencyNote: 'ملاحظة: هذا للعرض فقط. الدفعات ستكون بعملة المتجر.',
       notifications: 'الإشعارات',
       orderUpdates: 'تحديثات الطلبات',
       promotions: 'العروض والترويجات',
@@ -72,11 +82,15 @@ export function ProfileSettingsPage() {
       sounds: 'المؤثرات الصوتية',
       settingsSaved: 'تم حفظ الإعدادات بنجاح!',
       languageChanged: 'تم تغيير اللغة!',
+      currencyChanged: 'تم تغيير العملة!',
       comingSoon: 'قريباً',
     },
     ru: {
       title: 'Настройки',
       language: 'Язык',
+      currency: 'Валюта отображения',
+      currencyDesc: 'Выберите предпочитаемую валюту для цен',
+      currencyNote: 'Примечание: Это только для отображения. Оплата будет в валюте магазина.',
       notifications: 'Уведомления',
       orderUpdates: 'Обновления заказов',
       promotions: 'Акции и предложения',
@@ -90,11 +104,15 @@ export function ProfileSettingsPage() {
       sounds: 'Звуковые эффекты',
       settingsSaved: 'Настройки сохранены!',
       languageChanged: 'Язык изменен!',
+      currencyChanged: 'Валюта изменена!',
       comingSoon: 'Скоро',
     },
     ky: {
       title: 'Жөндөөлөр',
       language: 'Тил',
+      currency: 'Көрсөтүлүү валюта',
+      currencyDesc: 'Башкаруу үчүн сүрөттөөчү валютаны танданыз',
+      currencyNote: 'Эсептөөлөр магазындын валютасында болот. Бул көрсөтүлүү үчүн.',
       notifications: 'Билдирүүлөр',
       orderUpdates: 'Буйрутмалар жаңыртуулары',
       promotions: 'Акциялар жана сунуштар',
@@ -108,6 +126,7 @@ export function ProfileSettingsPage() {
       sounds: 'Үн эффектилери',
       settingsSaved: 'Жөндөөлөр сакталды!',
       languageChanged: 'Тил өзгөртүлдү!',
+      currencyChanged: 'Валюта өзгөртүлдү!',
       comingSoon: 'Жакында',
     },
   }[currentLanguage as 'en' | 'ar' | 'ru' | 'ky'] || t.en;
@@ -157,6 +176,16 @@ export function ProfileSettingsPage() {
   const handleLanguageChange = (langCode: string) => {
     changeLanguage(langCode);
     toast.success(t.languageChanged);
+    
+    // Play sound effect if enabled
+    if (soundEffects) {
+      playSound('success');
+    }
+  };
+
+  const handleCurrencyChange = (currency: typeof availableCurrencies[0]) => {
+    setDisplayCurrency(currency);
+    toast.success(t.currencyChanged);
     
     // Play sound effect if enabled
     if (soundEffects) {
@@ -254,6 +283,60 @@ export function ProfileSettingsPage() {
                   )}
                 </motion.button>
               ))}
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Currency */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <GlassCard variant="elevated" className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-[#1F2933]">{t.currency}</h2>
+                <p className="text-xs text-gray-600 mt-0.5">{t.currencyDesc}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {availableCurrencies.map((curr) => (
+                <motion.button
+                  key={curr.code}
+                  onClick={() => handleCurrencyChange(curr)}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    displayCurrency.code === curr.code
+                      ? 'border-green-600 bg-green-50 shadow-lg'
+                      : 'border-[#E5E7EB] hover:border-[#9CA3AF]'
+                  }`}
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="text-3xl mb-2">{curr.flag}</div>
+                  <div className="font-bold text-lg text-[#1F2933]">{curr.symbol} {curr.code}</div>
+                  <div className="text-xs text-gray-600 mt-1">{curr.name}</div>
+                  {displayCurrency.code === curr.code && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="mt-2"
+                    >
+                      <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
+                    </motion.div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">
+                {t.currencyNote}
+              </p>
             </div>
           </GlassCard>
         </motion.div>

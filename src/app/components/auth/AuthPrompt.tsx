@@ -176,92 +176,127 @@ export function AuthPrompt({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-gradient-to-br from-[#667c67]/90 via-black/70 to-[#526250]/90 backdrop-blur-md"
           onClick={onClose}
         />
 
         {/* Modal */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          exit={{ opacity: 0, scale: 0.95, y: 30 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         >
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all"
+            className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-[#667c67]" />
           </button>
 
-          {/* Header */}
-          <div className="bg-gradient-to-br from-[#667c67] to-[#526250] p-8 text-white">
+          {/* Header with Brand Colors */}
+          <div className="relative bg-gradient-to-br from-[#667c67] via-[#5a6f5b] to-[#526250] p-10 text-white overflow-hidden">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#e4dbc4]/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-[#e4dbc4]/10 rounded-full blur-3xl" />
+            
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
+              className="relative w-20 h-20 mx-auto mb-5 bg-gradient-to-br from-[#e4dbc4] to-[#d4c9a8] rounded-3xl flex items-center justify-center shadow-xl"
             >
-              <Sparkles className="w-8 h-8 text-white" />
+              <Sparkles className="w-10 h-10 text-[#667c67]" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-center mb-2">{title}</h2>
-            <p className="text-center text-white/90 text-sm">{message}</p>
+            
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-black text-center mb-2 tracking-tight"
+            >
+              {title}
+            </motion.h2>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-center text-[#e4dbc4] text-sm font-medium"
+            >
+              {message}
+            </motion.p>
           </div>
 
-          <div className="p-6">
+          <div className="p-8">
             {/* Phone Registration */}
             {mode === 'phone' && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {!otpSent ? (
                   <>
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <p className="text-sm text-blue-800 font-medium">
-                        Quick registration with your Kyrgyzstan phone number (+996)
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 bg-gradient-to-br from-[#667c67]/10 to-[#e4dbc4]/20 border-2 border-[#e4dbc4] rounded-2xl"
+                    >
+                      <p className="text-sm text-[#667c67] font-semibold text-center">
+                        🇰🇬 Quick registration with your Kyrgyzstan phone number
                       </p>
-                    </div>
+                    </motion.div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-gray-800 mb-3">
                         Phone Number
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                          <Phone className="w-5 h-5 text-[#667c67]" />
+                        </div>
                         <input
                           type="tel"
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
                           placeholder="+996 (555) 123-456"
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none transition-all"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                         />
                       </div>
                     </div>
 
                     {error && (
-                      <div className="flex items-center gap-2 text-red-600 text-sm">
-                        <AlertCircle className="w-4 h-4" />
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 text-sm font-medium"
+                      >
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
                         {error}
-                      </div>
+                      </motion.div>
                     )}
 
                     <Button
                       onClick={handleSendOTP}
                       disabled={phoneNumber.length < 10}
-                      className="w-full h-12 bg-[#667c67] hover:bg-[#526250] text-white font-semibold"
+                      className="w-full h-14 bg-gradient-to-r from-[#667c67] to-[#526250] hover:from-[#526250] hover:to-[#667c67] text-white font-bold text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
                     >
-                      Send OTP
+                      Send OTP Code
                     </Button>
                   </>
                 ) : (
                   <>
-                    <div className="text-center mb-4">
-                      <p className="text-sm text-gray-600">OTP sent to</p>
-                      <p className="text-lg font-bold text-[#667c67]">{phoneNumber}</p>
-                    </div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-center mb-6 p-4 bg-gradient-to-br from-[#e4dbc4]/30 to-[#667c67]/10 rounded-2xl"
+                    >
+                      <p className="text-sm text-gray-600 mb-1">OTP sent to</p>
+                      <p className="text-xl font-black text-[#667c67]">{phoneNumber}</p>
+                    </motion.div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3 text-center">
-                        Enter OTP Code
+                      <label className="block text-sm font-bold text-gray-800 mb-4 text-center">
+                        Enter 6-Digit Code
                       </label>
                       <div className="flex gap-2 justify-center">
                         {otp.map((digit, index) => (
@@ -274,23 +309,23 @@ export function AuthPrompt({
                             value={digit}
                             onChange={(e) => handleOTPChange(index, e.target.value)}
                             onKeyDown={(e) => handleOTPKeyDown(index, e)}
-                            className="w-12 h-12 text-center text-xl font-bold rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none transition-all"
+                            className="w-12 h-14 text-center text-2xl font-black rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all text-[#667c67]"
                           />
                         ))}
                       </div>
                     </div>
 
-                    <div className="text-center text-sm">
+                    <div className="text-center text-sm p-3 bg-gray-50 rounded-xl">
                       {otpTimer > 0 ? (
                         <p className="text-gray-600">
-                          Resend in <span className="font-bold text-[#667c67]">{otpTimer}s</span>
+                          Resend code in <span className="font-black text-[#667c67] text-base">{otpTimer}s</span>
                         </p>
                       ) : (
                         <button
                           onClick={handleSendOTP}
-                          className="font-semibold text-[#667c67] hover:underline"
+                          className="font-bold text-[#667c67] hover:text-[#526250] transition-colors"
                         >
-                          Resend OTP
+                          Resend OTP Code
                         </button>
                       )}
                     </div>
@@ -298,9 +333,9 @@ export function AuthPrompt({
                     <Button
                       onClick={handleVerifyOTP}
                       disabled={otp.join('').length < 6 || loading}
-                      className="w-full h-12 bg-[#667c67] hover:bg-[#526250] text-white font-semibold"
+                      className="w-full h-14 bg-gradient-to-r from-[#667c67] to-[#526250] hover:from-[#526250] hover:to-[#667c67] text-white font-bold text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
                     >
-                      {loading ? 'Verifying...' : 'Verify & Continue'}
+                      {loading ? 'Verifying...' : '✓ Verify & Continue'}
                     </Button>
 
                     <button
@@ -308,34 +343,34 @@ export function AuthPrompt({
                         setOtpSent(false);
                         setOtp(['', '', '', '', '', '']);
                       }}
-                      className="w-full text-center text-sm font-semibold text-gray-600 hover:text-[#667c67]"
+                      className="w-full text-center text-sm font-bold text-gray-500 hover:text-[#667c67] transition-colors py-2"
                     >
-                      Change Number
+                      ← Change Phone Number
                     </button>
                   </>
                 )}
 
-                <div className="relative">
+                <div className="relative py-4">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
+                    <div className="w-full border-t-2 border-gray-200" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Or</span>
+                    <span className="px-4 bg-white text-gray-500 font-semibold">Or continue with</span>
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <button
                     onClick={() => setMode('signin')}
-                    className="w-full py-3 text-sm font-semibold text-[#667c67] hover:bg-gray-50 rounded-xl transition-all"
+                    className="w-full py-4 text-sm font-bold text-[#667c67] bg-[#e4dbc4]/30 hover:bg-[#e4dbc4]/50 rounded-2xl transition-all border-2 border-transparent hover:border-[#e4dbc4]"
                   >
-                    Sign in with email
+                    📧 Sign in with Email
                   </button>
                   <button
                     onClick={handleContinueAsGuest}
-                    className="w-full py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
+                    className="w-full py-4 text-sm font-bold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-all"
                   >
-                    Continue as Guest
+                    Continue as Guest →
                   </button>
                 </div>
               </div>
@@ -343,62 +378,68 @@ export function AuthPrompt({
 
             {/* Email Sign In */}
             {mode === 'signin' && (
-              <form onSubmit={handleSignIn} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="your@email.com"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                       required
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 text-sm font-medium"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     {error}
-                  </div>
+                  </motion.div>
                 )}
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-[#667c67] hover:bg-[#526250] text-white font-semibold"
+                  className="w-full h-14 bg-gradient-to-r from-[#667c67] to-[#526250] hover:from-[#526250] hover:to-[#667c67] text-white font-bold text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
                 >
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? 'Signing in...' : '→ Sign In'}
                 </Button>
 
-                <div className="text-center space-y-2">
+                <div className="text-center space-y-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setMode('signup')}
-                    className="text-sm font-semibold text-[#667c67] hover:underline"
+                    className="text-sm font-bold text-[#667c67] hover:text-[#526250] transition-colors"
                   >
-                    Don't have an account? Sign up
+                    Don't have an account? <span className="underline">Sign up</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('phone')}
-                    className="w-full text-sm font-semibold text-gray-600 hover:text-[#667c67]"
+                    className="w-full text-sm font-bold text-gray-500 hover:text-[#667c67] transition-colors py-2"
                   >
                     ← Back to phone registration
                   </button>
@@ -410,88 +451,99 @@ export function AuthPrompt({
             {mode === 'signup' && (
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="John Doe"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="your@email.com"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Phone (Optional)</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">
+                    Phone <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="+996 (555) 123-456"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                  <label className="block text-sm font-bold text-gray-800 mb-3">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]" />
                     <input
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] outline-none"
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-4 focus:ring-[#667c67]/10 outline-none transition-all font-medium text-gray-800"
                       required
                       minLength={6}
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-2 ml-1">Minimum 6 characters</p>
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
-                    <AlertCircle className="w-4 h-4" />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 text-sm font-medium"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
                     {error}
-                  </div>
+                  </motion.div>
                 )}
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 bg-[#667c67] hover:bg-[#526250] text-white font-semibold"
+                  className="w-full h-14 bg-gradient-to-r from-[#667c67] to-[#526250] hover:from-[#526250] hover:to-[#667c67] text-white font-bold text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
                 >
-                  {loading ? 'Creating account...' : 'Create Account'}
+                  {loading ? 'Creating account...' : '✓ Create Account'}
                 </Button>
 
-                <div className="text-center space-y-2">
+                <div className="text-center space-y-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setMode('signin')}
-                    className="text-sm font-semibold text-[#667c67] hover:underline"
+                    className="text-sm font-bold text-[#667c67] hover:text-[#526250] transition-colors"
                   >
-                    Already have an account? Sign in
+                    Already have an account? <span className="underline">Sign in</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('phone')}
-                    className="w-full text-sm font-semibold text-gray-600 hover:text-[#667c67]"
+                    className="w-full text-sm font-bold text-gray-500 hover:text-[#667c67] transition-colors py-2"
                   >
                     ← Back to phone registration
                   </button>

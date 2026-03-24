@@ -25,6 +25,14 @@ export function RegionSelectionPage() {
     }
   }, [selectedBranch, branchId, navigate]);
 
+  // Reset region and table selection when order type changes
+  useEffect(() => {
+    if (orderType !== 'dine-in') {
+      setLocalRegion(null);
+      setSelectedTableId(null);
+    }
+  }, [orderType]);
+
   const translations = {
     en: {
       title: 'How would you like to order?',
@@ -135,7 +143,13 @@ export function RegionSelectionPage() {
   const selectedRegionData = selectedBranch.regions.find(r => r.id === localRegion);
 
   const handleContinue = () => {
-    if (selectedTableId) {
+    if (selectedTableId && orderType === 'dine-in') {
+      // For dine-in: navigate to check-in page for staff approval
+      const selectedTableData = selectedRegionData?.tables.find(t => t.id === selectedTableId);
+      selectTable(selectedTableId);
+      navigate(`/table-check-in?table=${selectedTableId}&tableName=${selectedTableData?.number || selectedTableId}&method=manual`);
+    } else if (selectedTableId) {
+      // For takeaway/delivery: go directly to menu
       selectTable(selectedTableId);
       navigate(`/branch/${branchId}/menu`);
     }
@@ -144,13 +158,13 @@ export function RegionSelectionPage() {
   const getTableColor = (status: string) => {
     switch (status) {
       case 'available':
-        return 'bg-success hover:bg-success/90 border-success';
+        return 'bg-[#16a34a] hover:bg-[#15803d] border-[#16a34a]';
       case 'occupied':
-        return 'bg-destructive border-destructive cursor-not-allowed';
+        return 'bg-[#dc2626] border-[#dc2626] cursor-not-allowed';
       case 'reserved':
-        return 'bg-warning border-warning cursor-not-allowed';
+        return 'bg-[#ea580c] border-[#ea580c] cursor-not-allowed';
       default:
-        return 'bg-gray-300 border-gray-300';
+        return 'bg-gray-400 border-gray-400';
     }
   };
 
@@ -429,12 +443,12 @@ export function RegionSelectionPage() {
                       getTableColor(table.status)
                     } ${
                       isSelected ? 'ring-4 ring-[#667c67] ring-offset-2 scale-105' : ''
-                    } flex flex-col items-center justify-center p-2`}
+                    } flex flex-col items-center justify-center p-2 shadow-lg`}
                   >
-                    <div className="text-white font-bold text-lg">
+                    <div className="text-white font-black text-2xl drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                       {table.number}
                     </div>
-                    <div className="text-white/90 text-xs flex items-center gap-1">
+                    <div className="text-white text-xs flex items-center gap-1 mt-1" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
                       <Users className="w-3 h-3" />
                       {table.seats}
                     </div>

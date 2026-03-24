@@ -4,6 +4,7 @@ import { useApp } from '../contexts/AppContext';
 import { useFavorites } from '../contexts/FavoritesContext';
 import { Home, UtensilsCrossed, ShoppingCart, Gift, User } from 'lucide-react';
 import { Suspense } from 'react';
+import { ActiveOrdersButton } from '../components/ActiveOrdersButton';
 
 // Pages that should show the bottom navigation
 const PAGES_WITH_BOTTOM_NAV = [
@@ -127,6 +128,9 @@ export function MobileLayout() {
       </main>
       
       {showBottomNav && <BottomNav items={bottomNavItems} />}
+      
+      {/* Floating Active Orders Button */}
+      <ActiveOrdersButton />
     </div>
   );
 }

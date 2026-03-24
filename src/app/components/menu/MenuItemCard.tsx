@@ -4,6 +4,8 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { motion } from 'motion/react';
 import { MenuItem } from '../../lib/types';
+import { useStoreCurrency } from '../../hooks/useCurrency';
+import { formatCurrency } from '../../utils/currency';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -16,6 +18,9 @@ export function MenuItemCard({ item, onAdd, onClick, language }: MenuItemCardPro
   const translation = item.translations[language];
   const hasDiscount = item.discount && item.discount > 0;
   const discountedPrice = hasDiscount ? item.price * (1 - item.discount! / 100) : item.price;
+  
+  // Use centralized currency hook for dynamic updates
+  const currency = useStoreCurrency();
 
   const getBadgeIcon = (badge: string) => {
     switch (badge) {
@@ -122,11 +127,11 @@ export function MenuItemCard({ item, onAdd, onClick, language }: MenuItemCardPro
               <div className="flex items-center gap-2">
                 {hasDiscount && (
                   <span className="text-sm text-muted-foreground line-through">
-                    ${item.price.toFixed(2)}
+                    {formatCurrency(item.price, currency)}
                   </span>
                 )}
                 <span className={`font-bold ${hasDiscount ? 'text-red-500 text-lg' : 'text-primary text-base'}`}>
-                  ${discountedPrice.toFixed(2)}
+                  {formatCurrency(discountedPrice, currency)}
                 </span>
               </div>
 

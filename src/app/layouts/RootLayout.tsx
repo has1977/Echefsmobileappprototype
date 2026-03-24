@@ -6,10 +6,12 @@ import { SettingsOnboarding } from '../components/SettingsOnboarding';
 import { AuthProvider } from '../contexts/AuthContext';
 import { AppProvider } from '../contexts/AppContext';
 import { FavoritesProvider } from '../contexts/FavoritesContext';
+import { CheckInProvider } from '../contexts/CheckInContext';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 /**
  * RootLayout - Top-level layout for all routes
- * Updated: March 19, 2026 - Build 3.3.2 - Providers moved here
+ * Updated: March 24, 2026 - Build 3.3.3 - Added ErrorBoundary
  */
 export function RootLayout() {
   console.log('🟡 RootLayout rendering with providers');
@@ -38,14 +40,18 @@ export function RootLayout() {
     <AuthProvider>
       <AppProvider>
         <FavoritesProvider>
-          <div className="fixed inset-0 overflow-hidden">
-            <main className="h-full w-full overflow-y-auto overflow-x-hidden">
-              <Outlet />
-            </main>
-            <Toaster position="top-center" richColors />
-            <OfflineIndicator />
-            <SettingsOnboarding />
-          </div>
+          <CheckInProvider>
+            <div className="fixed inset-0 overflow-hidden">
+              <main className="h-full w-full overflow-y-auto overflow-x-hidden">
+                <ErrorBoundary>
+                  <Outlet />
+                </ErrorBoundary>
+              </main>
+              <Toaster position="top-center" richColors />
+              <OfflineIndicator />
+              <SettingsOnboarding />
+            </div>
+          </CheckInProvider>
         </FavoritesProvider>
       </AppProvider>
     </AuthProvider>

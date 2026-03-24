@@ -14,7 +14,7 @@ import {
   Crown, TrendingUp, Award, Settings, Shield, RefreshCw,
   Home, Briefcase, Building, CreditCard, History, Loader2,
   Eye, EyeOff, MapPinned, Truck, UtensilsCrossed, ArrowLeft,
-  Sparkles, Zap
+  Sparkles, Zap, Lightbulb, Trophy, Percent, Target, Info
 } from 'lucide-react';
 import type { Order, CartItem, UserAddress, UserPaymentMethod } from '../lib/types';
 
@@ -764,8 +764,15 @@ export function EnhancedProfilePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 p-4">
                   <button
+                    onClick={() => navigate('/my-orders')}
+                    className="p-4 rounded-xl bg-gradient-to-br from-[#667c67] to-[#526250] text-white hover:shadow-lg transition-all active:scale-95"
+                  >
+                    <Package className="w-6 h-6 mx-auto mb-2" />
+                    <div className="font-semibold text-sm">{t.orders}</div>
+                  </button>
+                  <button
                     onClick={() => navigate('/branch-selection')}
-                    className="p-4 rounded-xl bg-gradient-to-br from-[#667c67] to-[#546352] text-white hover:shadow-lg transition-all active:scale-95"
+                    className="p-4 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:shadow-lg transition-all active:scale-95"
                   >
                     <ShoppingBag className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-semibold text-sm">{t.browseMenu}</div>
@@ -784,13 +791,213 @@ export function EnhancedProfilePage() {
                     <Heart className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-semibold text-sm">{t.favorites}</div>
                   </button>
-                  <button
-                    onClick={() => setActiveTab('tracking')}
-                    className="p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-all active:scale-95"
-                  >
-                    <Clock className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-semibold text-sm">{t.trackOrder}</div>
-                  </button>
+                </div>
+              </Card>
+
+              {/* Rewards Program Guide */}
+              <Card className="overflow-hidden border-2 border-purple-200 shadow-lg">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <Lightbulb className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white font-bold text-lg">How Rewards Work</h3>
+                      <p className="text-white/90 text-sm">Your complete guide to earning & redeeming</p>
+                    </div>
+                    <button
+                      onClick={() => navigate('/rewards-guide')}
+                      className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all"
+                    >
+                      <ChevronRight className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-4 space-y-4">
+                  {/* Loyalty Points */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Star className="w-5 h-5 text-white" fill="white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">Loyalty Points</h4>
+                        <p className="text-gray-600 text-xs">Earn with every purchase</p>
+                      </div>
+                    </div>
+                    <div className="ml-13 space-y-1.5 pl-3 border-l-2 border-yellow-200">
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Earn 1 point for every $10</span> you spend
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • Points are <span className="font-semibold">branch-specific</span> - use them where you earned them
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • Points <span className="font-semibold">never expire</span> as long as you stay active
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • Redeem points for <span className="font-semibold">exclusive rewards & discounts</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+
+                  {/* Tier System */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Trophy className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">Membership Tiers</h4>
+                        <p className="text-gray-600 text-xs">Level up for better rewards</p>
+                      </div>
+                    </div>
+                    <div className="ml-13 space-y-2 pl-3 border-l-2 border-blue-200">
+                      <div className="p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Award className="w-3 h-3 text-gray-600" />
+                          <span className="font-bold text-gray-900 text-xs">Bronze</span>
+                          <span className="text-[10px] text-gray-500">• 0-99 points</span>
+                        </div>
+                        <p className="text-[10px] text-gray-600 ml-5">Standard benefits, welcome rewards</p>
+                      </div>
+                      <div className="p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Award className="w-3 h-3 text-gray-400" />
+                          <span className="font-bold text-gray-700 text-xs">Silver</span>
+                          <span className="text-[10px] text-gray-500">• 100-299 points</span>
+                        </div>
+                        <p className="text-[10px] text-gray-600 ml-5">10% bonus points, exclusive offers</p>
+                      </div>
+                      <div className="p-2 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <Crown className="w-3 h-3 text-yellow-600" />
+                          <span className="font-bold text-yellow-900 text-xs">Gold</span>
+                          <span className="text-[10px] text-yellow-700">• 300+ points</span>
+                        </div>
+                        <p className="text-[10px] text-yellow-800 ml-5">25% bonus points, priority perks, VIP access</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+
+                  {/* Promotions */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Percent className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">Exclusive Promotions</h4>
+                        <p className="text-gray-600 text-xs">Special offers & discounts</p>
+                      </div>
+                    </div>
+                    <div className="ml-13 space-y-1.5 pl-3 border-l-2 border-purple-200">
+                      <p className="text-xs text-gray-700">
+                        • Get <span className="font-semibold">personalized promo codes</span> via email & notifications
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Time-limited offers</span> - flash sales & seasonal deals
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Stack promotions</span> with loyalty rewards for maximum savings
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Branch-exclusive deals</span> - unique offers at each location
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+
+                  {/* Gifts Catalog */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Gift className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">Rewards Catalog</h4>
+                        <p className="text-gray-600 text-xs">Redeem points for amazing gifts</p>
+                      </div>
+                    </div>
+                    <div className="ml-13 space-y-1.5 pl-3 border-l-2 border-green-200">
+                      <p className="text-xs text-gray-700">
+                        • Browse <span className="font-semibold">curated gift catalog</span> with items for all point levels
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • Redeem for <span className="font-semibold">free menu items, discounts, or merchandise</span>
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Branch-specific gifts</span> - unique items at each location
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        • <span className="font-semibold">Limited edition rewards</span> for top-tier members
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+
+                  {/* Pro Tips */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Zap className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">Pro Tips</h4>
+                        <p className="text-gray-600 text-xs">Maximize your rewards</p>
+                      </div>
+                    </div>
+                    <div className="ml-13 space-y-1.5 pl-3 border-l-2 border-orange-200">
+                      <p className="text-xs text-gray-700">
+                        💡 <span className="font-semibold">Visit regularly</span> to maintain your tier status
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        💡 <span className="font-semibold">Enable notifications</span> to never miss exclusive deals
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        💡 <span className="font-semibold">Check promotions page</span> before ordering for best savings
+                      </p>
+                      <p className="text-xs text-gray-700">
+                        💡 <span className="font-semibold">Combine offers strategically</span> - points + promo codes work together
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="pt-2">
+                    <div className="p-3 bg-gradient-to-r from-[#667c67]/10 to-[#e4dbc4]/20 rounded-xl border-2 border-[#667c67]/20">
+                      <div className="flex items-start gap-2">
+                        <Target className="w-4 h-4 text-[#667c67] flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <h5 className="font-bold text-[#667c67] mb-1 text-xs">Remember: Branch-Specific Rewards</h5>
+                          <p className="text-[10px] text-gray-700 leading-relaxed">
+                            Each branch has its own loyalty program. Points, gifts, and promotions earned at one branch 
+                            can only be used at that same branch. This allows us to offer you location-specific rewards 
+                            and personalized experiences tailored to your favorite spots!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* View Full Guide Button */}
+                    <button
+                      onClick={() => navigate('/rewards-guide')}
+                      className="w-full mt-3 p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-2"
+                    >
+                      <Lightbulb className="w-4 h-4" />
+                      View Complete Rewards Guide
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </Card>
 

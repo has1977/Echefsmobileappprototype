@@ -31,9 +31,14 @@ import { ProfileSecurityPage } from './pages/ProfileSecurityPage';
 import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 import { HelpPage } from './pages/HelpPage';
 import { FavoritesPage } from './pages/FavoritesPage';
+import { RewardsGuidePage } from './pages/RewardsGuidePage';
+import { MyOrdersPage } from './pages/MyOrdersPage';
 
 // Unified Control Panel (replaces all dashboards)
 import { UnifiedControlPanel } from './pages/UnifiedControlPanel';
+
+// Developer Tools
+import { DevTools } from './pages/DevTools';
 
 // Manager Pages (still accessible from control panel)
 import { ManagerMenuManagement } from './pages/manager/ManagerMenuManagement';
@@ -67,7 +72,9 @@ import { AdminCustomers } from './pages/admin/AdminCustomers';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { AdminLoyalty } from './pages/admin/AdminLoyalty';
 import { AdminLoyaltyNew } from './pages/admin/AdminLoyaltyNew';
+import { AdminLoyaltySettings } from './pages/admin/AdminLoyaltySettings';
 import { StyleGuidePage } from './pages/admin/StyleGuidePage';
+import { AdminCurrency } from './pages/admin/AdminCurrency';
 
 // Loyalty & Promotions Additions
 import {
@@ -80,6 +87,10 @@ import {
   NotificationsPage,
   EmptyStatesPage,
 } from './pages/loyalty-additions';
+
+// Table Check-In System
+import { TableCheckInPage } from './pages/TableCheckInPage';
+import { StaffCheckInDashboard } from './pages/StaffCheckInDashboard';
 
 // 404 Page
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -95,11 +106,16 @@ export const router = createBrowserRouter([
         Component: UnifiedControlPanel,
       },
       {
+        path: 'dev-tools',
+        Component: DevTools,
+      },
+      {
         path: 'admin',
         children: [
           { index: true, Component: AdminDashboard },
           { path: 'settings', Component: AdminSettings },
           { path: 'languages', Component: AdminLanguages },
+          { path: 'currency', Component: AdminCurrency },
           { path: 'menu', Component: AdminMenuManagement },
           { path: 'branches', Component: AdminBranches },
           { path: 'branches/:branchId', Component: AdminBranchEditor },
@@ -108,6 +124,7 @@ export const router = createBrowserRouter([
           { path: 'analytics', Component: AdminAnalytics },
           { path: 'promotions', Component: AdminPromotionsNew },
           { path: 'loyalty', Component: AdminLoyaltyNew },
+          { path: 'loyalty/settings', Component: AdminLoyaltySettings },
           { path: 'orders', Component: AdminOrders },
           { path: 'customers', Component: AdminCustomers },
           { path: 'gifts', Component: AdminGifts },
@@ -233,6 +250,14 @@ export const router = createBrowserRouter([
             path: 'favorites',
             Component: FavoritesPage,
           },
+          {
+            path: 'rewards-guide',
+            Component: RewardsGuidePage,
+          },
+          {
+            path: 'my-orders',
+            Component: MyOrdersPage,
+          },
           
           // Loyalty & Promotions Additions
           {
@@ -247,6 +272,16 @@ export const router = createBrowserRouter([
               { path: 'notifications', Component: NotificationsPage },
               { path: 'empty-states', Component: EmptyStatesPage },
             ],
+          },
+          
+          // Table Check-In System
+          {
+            path: 'table-check-in',
+            Component: TableCheckInPage,
+          },
+          {
+            path: 'staff-check-in-dashboard',
+            Component: StaffCheckInDashboard,
           },
           
           // 404

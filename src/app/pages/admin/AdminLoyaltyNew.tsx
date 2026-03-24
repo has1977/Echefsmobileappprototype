@@ -89,6 +89,7 @@ export function AdminLoyaltyNew() {
               <Button
                 size="sm"
                 className="bg-white text-[#667c67] hover:bg-white/90 font-semibold"
+                onClick={() => navigate('/admin/loyalty/settings')}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings

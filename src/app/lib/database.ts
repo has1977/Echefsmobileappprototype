@@ -10,7 +10,11 @@ import type {
   LoyaltyCard,
   SystemSettings,
   MenuType,
+  Gift,
 } from './types';
+import { loyaltyRules as initialLoyaltyRules, gifts as initialGifts } from '../services/promotionsData';
+import type { LoyaltyRule } from '../services/promotionsData';
+import { initializeSampleOrders } from '../services/ordersData';
 
 // This would connect to Supabase or your backend
 // For now, using localStorage with business logic
@@ -66,10 +70,12 @@ class DatabaseService {
       categories: [] as Category[],
       menuItems: [] as MenuItem[],
       branches: [] as Branch[],
-      orders: [] as Order[],
+      orders: initializeSampleOrders() as Order[],
       users: [] as User[],
       promotions: [] as Promotion[],
       loyaltyCards: [] as LoyaltyCard[],
+      loyaltyRules: initialLoyaltyRules as LoyaltyRule[],
+      gifts: initialGifts as Gift[],
       settings: {
         tax: {
           enabled: true,
@@ -83,6 +89,9 @@ class DatabaseService {
         loyalty: {
           enabled: true,
           pointsPerDollar: 10,
+          currency: 'KGS', // Kyrgyzstan Som
+          currencySymbol: 'с',
+          amountPerPoint: 100, // 100 KGS = 1 point
           tiers: {
             bronze: {
               minPoints: 0,
@@ -449,15 +458,22 @@ class DatabaseService {
   }
 
   // Loyalty
-  getLoyaltyCard(userId: string): LoyaltyCard | null {
-    return this.getDB().loyaltyCards.find((lc: LoyaltyCard) => lc.userId === userId) || null;
+  getLoyaltyCard(userId: string, branchId?: string): LoyaltyCard | null {
+    const cards = this.getDB().loyaltyCards.filter((lc: LoyaltyCard) => lc.userId === userId);
+    if (branchId) {
+      // Get branch-specific card
+      return cards.find((lc: LoyaltyCard) => lc.branchId === branchId) || null;
+    }
+    // Get global card (no branchId) or first card if no branchId specified
+    return cards.find((lc: LoyaltyCard) => !lc.branchId) || cards[0] || null;
   }
 
-  createLoyaltyCard(userId: string): LoyaltyCard {
+  createLoyaltyCard(userId: string, branchId?: string): LoyaltyCard {
     const db = this.getDB();
     const newCard: LoyaltyCard = {
       id: `loyalty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       userId,
+      branchId,
       points: 0,
       tier: 'bronze',
       lifetimePoints: 0,
@@ -493,6 +509,16 @@ class DatabaseService {
 
     this.saveDB(db);
     return card;
+  }
+
+  getLoyaltyRules(): LoyaltyRule[] {
+    const db = this.getDB();
+    return db.loyaltyRules || [];
+  }
+
+  getGifts(): Gift[] {
+    const db = this.getDB();
+    return db.gifts || [];
   }
 
   // Utility methods
@@ -547,6 +573,38 @@ class DatabaseService {
     db.users = db.users?.filter((u: User) => u.id !== userId) || [];
     this.saveDB(db);
     return db.users.length < initialLength;
+  }
+
+  /**
+   * Initialize or refresh sample orders data
+   * Useful for testing and demonstration
+   */
+  initializeSampleOrders(): void {
+    const db = this.getDB();
+    // Keep existing orders but add sample ones if empty
+    if (db.orders.length === 0) {
+      db.orders = initializeSampleOrders();
+      this.saveDB(db);
+    }
+  }
+
+  /**
+   * Refresh sample orders (replace existing with fresh samples)
+   * WARNING: This will delete all existing orders
+   */
+  refreshSampleOrders(): void {
+    const db = this.getDB();
+    db.orders = initializeSampleOrders();
+    this.saveDB(db);
+  }
+
+  /**
+   * Clear all orders
+   */
+  clearOrders(): void {
+    const db = this.getDB();
+    db.orders = [];
+    this.saveDB(db);
   }
 }
 

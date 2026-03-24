@@ -96,6 +96,8 @@ export function OrderTrackingPage() {
       contactSupport: 'Contact Support',
       orderPlaced: 'Order Placed',
       branch: 'Branch',
+      myOrders: 'My Orders',
+      viewAllOrders: 'View All Orders',
     },
     ar: {
       title: 'تتبع الطلب',
@@ -131,6 +133,8 @@ export function OrderTrackingPage() {
       contactSupport: 'اتصل بالدعم',
       orderPlaced: 'تم تقديم الطلب',
       branch: 'الفرع',
+      myOrders: 'طلباتي',
+      viewAllOrders: 'عرض جميع الطلبات',
     },
     ru: {
       title: 'Отслеживание заказа',
@@ -166,6 +170,8 @@ export function OrderTrackingPage() {
       contactSupport: 'Поддержка',
       orderPlaced: 'Заказ размещен',
       branch: 'Филиал',
+      myOrders: 'Мои заказы',
+      viewAllOrders: 'Смотреть все заказы',
     },
     ky: {
       title: 'Буйруткону көзөмөлдөө',
@@ -201,6 +207,8 @@ export function OrderTrackingPage() {
       contactSupport: 'Колдоо',
       orderPlaced: 'Буйрутма берилди',
       branch: 'Филиал',
+      myOrders: 'Менин буйрутмаларым',
+      viewAllOrders: 'Бардык буйрутмаларды көрүү',
     },
   };
 
