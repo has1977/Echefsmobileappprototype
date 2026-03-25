@@ -2,26 +2,105 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Card } from '../../components/ui/card';
 import { Logo } from '../../components/shared/Logo';
-import { motion } from 'motion/react';
+import { GlassCard, motion, AnimatePresence } from '../../design-system';
 import { 
   Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, 
-  Loader2, ArrowLeft, Sparkles, ChevronRight
+  Loader2, ArrowLeft, Smartphone, ChevronRight, Shield, Globe
 } from 'lucide-react';
+
+type AuthMode = 'email' | 'phone';
+type PhoneStep = 'phone' | 'otp';
+
+// Country codes for Kyrgyzstan region
+const COUNTRY_CODES = [
+  { code: '+996', name: 'Kyrgyzstan', flag: '🇰🇬' },
+  { code: '+7', name: 'Russia', flag: '🇷🇺' },
+  { code: '+998', name: 'Uzbekistan', flag: '🇺🇿' },
+  { code: '+992', name: 'Tajikistan', flag: '🇹🇯' },
+  { code: '+993', name: 'Turkmenistan', flag: '🇹🇲' },
+  { code: '+994', name: 'Azerbaijan', flag: '🇦🇿' },
+  { code: '+374', name: 'Armenia', flag: '🇦🇲' },
+  { code: '+995', name: 'Georgia', flag: '🇬🇪' },
+];
 
 export function SignInPage() {
   const navigate = useNavigate();
   const { signIn, isLoading } = useAuth();
   
+  // Auth mode (email or phone)
+  const [authMode, setAuthMode] = useState<AuthMode>('email');
+  
+  // Email Auth
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Phone Auth
+  const [countryCode, setCountryCode] = useState('+996'); // Default to Kyrgyzstan
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [showCountryCodes, setShowCountryCodes] = useState(false);
+  const [phoneStep, setPhoneStep] = useState<PhoneStep>('phone');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [resendTimer, setResendTimer] = useState(0);
+  
+  // Common
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Format phone number for Kyrgyzstan
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // For Kyrgyzstan (+996), format as XXX XXX XXX
+    if (countryCode === '+996') {
+      if (digits.length <= 3) return digits;
+      if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
+    }
+    
+    // For other countries, basic formatting
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
+  };
+
+  const handlePhoneNumberChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setPhoneNumber(formatted);
+  };
+
+  const getFullPhoneNumber = () => {
+    return `${countryCode}${phoneNumber.replace(/\s/g, '')}`;
+  };
+
+  const validatePhoneNumber = () => {
+    const digits = phoneNumber.replace(/\D/g, '');
+    
+    // Kyrgyzstan numbers should be 9 digits
+    if (countryCode === '+996' && digits.length !== 9) {
+      setError('Phone number must be 9 digits for Kyrgyzstan');
+      return false;
+    }
+    
+    // Russia numbers should be 10 digits
+    if (countryCode === '+7' && digits.length !== 10) {
+      setError('Phone number must be 10 digits for Russia');
+      return false;
+    }
+    
+    // Other countries - at least 9 digits
+    if (digits.length < 9) {
+      setError('Please enter a valid phone number');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
@@ -29,7 +108,6 @@ export function SignInPage() {
     const result = await signIn(email, password);
 
     if (result.success) {
-      // Redirect to home or intended page
       const from = sessionStorage.getItem('redirectAfterLogin') || '/branch-selection';
       sessionStorage.removeItem('redirectAfterLogin');
       navigate(from);
@@ -37,6 +115,97 @@ export function SignInPage() {
       setError(result.error || 'Sign in failed');
       setIsSubmitting(false);
     }
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (phoneStep === 'phone') {
+      // Send OTP
+      setIsSubmitting(true);
+      
+      // Simulate sending OTP
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setPhoneStep('otp');
+        setResendTimer(60);
+        
+        // Start countdown
+        const interval = setInterval(() => {
+          setResendTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }, 1000);
+    } else {
+      // Verify OTP
+      setIsSubmitting(true);
+      const otpCode = otp.join('');
+      
+      // Simulate OTP verification
+      setTimeout(async () => {
+        if (otpCode === '123456' || otpCode.length === 6) {
+          // Auto sign in after OTP verification
+          const result = await signIn('customer@echefs.com', 'demo123'); // Demo for now
+          
+          if (result.success) {
+            const from = sessionStorage.getItem('redirectAfterLogin') || '/branch-selection';
+            sessionStorage.removeItem('redirectAfterLogin');
+            navigate(from);
+          } else {
+            setError('Verification failed. Please try again.');
+            setIsSubmitting(false);
+          }
+        } else {
+          setError('Invalid OTP. Please try again.');
+          setIsSubmitting(false);
+        }
+      }, 1000);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value[0];
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleResendOtp = () => {
+    setOtp(['', '', '', '', '', '']);
+    setResendTimer(60);
+    setError('');
+    
+    // Start countdown
+    const interval = setInterval(() => {
+      setResendTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleDemoSignIn = async (role: 'customer' | 'waiter' | 'manager' | 'admin') => {
@@ -51,7 +220,6 @@ export function SignInPage() {
     setEmail(account.email);
     setPassword(account.password);
     
-    // Auto submit
     setIsSubmitting(true);
     const result = await signIn(account.email, account.password);
     
@@ -66,28 +234,11 @@ export function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E4DBC4] via-[#f5f0e6] to-white flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Large circles */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#667c67]/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] bg-[#667c67]/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#E4DBC4]/30 rounded-full blur-3xl" />
-        
-        {/* Decorative dots pattern */}
-        <div className="absolute top-20 right-20 w-32 h-32 opacity-20">
-          <div className="grid grid-cols-4 gap-3">
-            {[...Array(16)].map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-[#667c67]" />
-            ))}
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-[#F9FAFB] via-white to-[#FBF8F4] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-md"
       >
         {/* Back Button */}
         <Button
@@ -99,135 +250,369 @@ export function SignInPage() {
           Back to Home
         </Button>
 
-        <Card className="overflow-hidden shadow-2xl border-2 border-[#E4DBC4]/50 backdrop-blur-sm bg-white/95">
-          {/* Header with Gradient */}
-          <div className="relative bg-gradient-to-br from-[#667c67] via-[#667c67] to-[#546352] text-white p-8 overflow-hidden">
-            {/* Decorative pattern overlay */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#E4DBC4] rounded-full blur-2xl" />
+        <GlassCard variant="elevated" className="overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#667c67] to-[#526250] text-white p-8">
+            {/* Logo */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                <Logo className="h-8" />
+              </div>
             </div>
-            
-            <div className="relative z-10">
-              {/* Logo */}
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-xl">
-                  <Logo className="h-8" />
-                </div>
-              </div>
 
-              {/* Title */}
-              <div className="text-center">
-                <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-                  <Sparkles className="w-6 h-6" />
-                  Welcome Back
-                </h1>
-                <p className="text-white/90">Sign in to continue your culinary journey</p>
-              </div>
+            {/* Title */}
+            <div className="text-center">
+              <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+              <p className="text-white/90">Sign in to continue your journey</p>
             </div>
           </div>
 
           <div className="p-8">
             {/* Error Message */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3"
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800 font-medium">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Auth Mode Toggle */}
+            <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-[#F9FAFB] rounded-xl">
+              <button
+                onClick={() => {
+                  setAuthMode('email');
+                  setError('');
+                  setPhoneStep('phone');
+                }}
+                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  authMode === 'email'
+                    ? 'bg-white text-[#667c67] shadow-md'
+                    : 'text-[#6B7280] hover:text-[#374151]'
+                }`}
               >
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800 font-medium">{error}</p>
-              </motion.div>
-            )}
+                <Mail className="w-4 h-4 inline-block mr-2" />
+                Email
+              </button>
+              <button
+                onClick={() => {
+                  setAuthMode('phone');
+                  setError('');
+                }}
+                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  authMode === 'phone'
+                    ? 'bg-white text-[#667c67] shadow-md'
+                    : 'text-[#6B7280] hover:text-[#374151]'
+                }`}
+              >
+                <Smartphone className="w-4 h-4 inline-block mr-2" />
+                Phone
+              </button>
+            </div>
 
-            {/* Sign In Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]/60" />
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="pl-12 h-12 rounded-xl border-2 border-gray-200 focus:border-[#667c67] transition-colors"
-                    required
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </div>
+            {/* Email Sign In Form */}
+            <AnimatePresence mode="wait">
+              {authMode === 'email' && (
+                <motion.form
+                  key="email-form"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleEmailSubmit}
+                  className="space-y-5"
+                >
+                  {/* Email */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
 
-              {/* Password */}
-              <div>
-                <label className="text-sm font-semibold mb-2 block text-gray-700">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#667c67]/60" />
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="pl-12 pr-12 h-12 rounded-xl border-2 border-gray-200 focus:border-[#667c67] transition-colors"
-                    required
-                    disabled={isSubmitting}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#667c67]/60 hover:text-[#667c67] transition-colors"
+                  {/* Password */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password"
+                        className="w-full pl-12 pr-12 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#667c67] transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Forgot Password */}
+                  <div className="flex justify-end">
+                    <Link 
+                      to="/forgot-password" 
+                      className="text-sm text-[#667c67] hover:text-[#546352] font-semibold hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
                     disabled={isSubmitting}
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="w-5 h-5 mr-2" />
+                        Sign In
+                      </>
+                    )}
+                  </Button>
+                </motion.form>
+              )}
 
-              {/* Forgot Password */}
-              <div className="flex justify-end">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-sm text-[#667c67] hover:text-[#546352] font-semibold hover:underline transition-colors"
+              {/* Phone Sign In Form */}
+              {authMode === 'phone' && (
+                <motion.form
+                  key="phone-form"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handlePhoneSubmit}
+                  className="space-y-5"
                 >
-                  Forgot password?
-                </Link>
-              </div>
+                  {phoneStep === 'phone' ? (
+                    <>
+                      {/* Phone Number */}
+                      <div>
+                        <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                          Phone Number
+                        </label>
+                        
+                        {/* Country Code Selector */}
+                        <div className="relative mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCountryCodes(!showCountryCodes)}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] hover:border-[#667c67] transition-all"
+                            disabled={isSubmitting}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-5 h-5 text-[#9CA3AF]" />
+                              <span className="text-sm font-medium text-[#374151]">
+                                {COUNTRY_CODES.find(c => c.code === countryCode)?.flag}{' '}
+                                {COUNTRY_CODES.find(c => c.code === countryCode)?.name}{' '}
+                                <span className="text-[#667c67]">({countryCode})</span>
+                              </span>
+                            </div>
+                            <ChevronRight className={`w-4 h-4 text-[#9CA3AF] transition-transform ${showCountryCodes ? 'rotate-90' : ''}`} />
+                          </button>
+                          
+                          {/* Country Codes Dropdown */}
+                          <AnimatePresence>
+                            {showCountryCodes && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute z-10 w-full mt-2 bg-white border-2 border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden"
+                              >
+                                <div className="max-h-64 overflow-y-auto">
+                                  {COUNTRY_CODES.map(country => (
+                                    <button
+                                      key={country.code}
+                                      type="button"
+                                      onClick={() => {
+                                        setCountryCode(country.code);
+                                        setShowCountryCodes(false);
+                                        setPhoneNumber(''); // Reset phone number on country change
+                                      }}
+                                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F9FAFB] transition-colors ${
+                                        countryCode === country.code ? 'bg-[#667c67]/10' : ''
+                                      }`}
+                                    >
+                                      <span className="text-2xl">{country.flag}</span>
+                                      <div className="flex-1 text-left">
+                                        <div className="text-sm font-medium text-[#374151]">{country.name}</div>
+                                        <div className="text-xs text-[#6B7280]">{country.code}</div>
+                                      </div>
+                                      {countryCode === country.code && (
+                                        <div className="w-2 h-2 rounded-full bg-[#667c67]" />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        
+                        {/* Phone Input */}
+                        <div className="relative">
+                          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                          <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                            placeholder={countryCode === '+996' ? '700 123 456' : '123 456 789'}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <p className="text-xs text-[#6B7280] mt-2">
+                          {countryCode === '+996' 
+                            ? 'Kyrgyzstan mobile number (9 digits)' 
+                            : 'Enter your mobile number'}
+                        </p>
+                      </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-[#667c67] to-[#546352] hover:shadow-xl h-12 text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    Sign In
-                  </>
-                )}
-              </Button>
-            </form>
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
+                        disabled={isSubmitting || !phoneNumber}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Sending Code...
+                          </>
+                        ) : (
+                          <>
+                            <Smartphone className="w-5 h-5 mr-2" />
+                            Send Verification Code
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* OTP Input */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-sm font-semibold text-[#374151]">
+                            Verification Code
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setPhoneStep('phone')}
+                            className="text-xs text-[#667c67] hover:underline font-semibold"
+                          >
+                            Change Number
+                          </button>
+                        </div>
+                        
+                        <p className="text-sm text-[#6B7280] mb-4">
+                          Code sent to <span className="font-semibold text-[#374151]">{phoneNumber}</span>
+                        </p>
+
+                        <div className="flex gap-2 justify-between mb-4">
+                          {otp.map((digit, index) => (
+                            <input
+                              key={index}
+                              id={`otp-${index}`}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => handleOtpChange(index, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                              className="w-full aspect-square text-center text-2xl font-bold rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                              disabled={isSubmitting}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Resend OTP */}
+                        <div className="text-center">
+                          {resendTimer > 0 ? (
+                            <p className="text-sm text-[#6B7280]">
+                              Resend code in <span className="font-bold text-[#667c67]">{resendTimer}s</span>
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleResendOtp}
+                              className="text-sm text-[#667c67] hover:text-[#546352] font-semibold hover:underline"
+                            >
+                              Resend Code
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
+                        disabled={isSubmitting || otp.join('').length !== 6}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-5 h-5 mr-2" />
+                            Verify & Sign In
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </motion.form>
+              )}
+            </AnimatePresence>
 
             {/* Divider */}
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t-2 border-gray-200" />
+                <div className="w-full border-t-2 border-[#E5E7EB]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-4 text-gray-500 font-semibold">Quick Demo Access</span>
+                <span className="bg-white px-4 text-[#6B7280] font-semibold">Quick Demo Access</span>
               </div>
             </div>
 
             {/* Demo Accounts */}
             <div className="space-y-3">
-              <p className="text-xs text-center text-gray-600 mb-4 font-medium">
-                Try the platform instantly with demo accounts:
+              <p className="text-xs text-center text-[#6B7280] mb-4 font-medium">
+                Try the platform instantly:
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <motion.button
@@ -235,7 +620,7 @@ export function SignInPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleDemoSignIn('customer')}
                   disabled={isSubmitting}
-                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300 transition-all disabled:opacity-50 group"
+                  className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300 hover:shadow-md transition-all disabled:opacity-50"
                 >
                   <div className="text-3xl mb-2">🛍️</div>
                   <div className="text-sm font-bold text-blue-900">Customer</div>
@@ -247,7 +632,7 @@ export function SignInPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleDemoSignIn('waiter')}
                   disabled={isSubmitting}
-                  className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-300 transition-all disabled:opacity-50 group"
+                  className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-300 hover:shadow-md transition-all disabled:opacity-50"
                 >
                   <div className="text-3xl mb-2">🍽️</div>
                   <div className="text-sm font-bold text-green-900">Waiter</div>
@@ -259,7 +644,7 @@ export function SignInPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleDemoSignIn('manager')}
                   disabled={isSubmitting}
-                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 hover:border-purple-300 transition-all disabled:opacity-50 group"
+                  className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200 hover:border-purple-300 hover:shadow-md transition-all disabled:opacity-50"
                 >
                   <div className="text-3xl mb-2">📊</div>
                   <div className="text-sm font-bold text-purple-900">Manager</div>
@@ -271,7 +656,7 @@ export function SignInPage() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleDemoSignIn('admin')}
                   disabled={isSubmitting}
-                  className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 hover:border-amber-300 transition-all disabled:opacity-50 group"
+                  className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 hover:border-amber-300 hover:shadow-md transition-all disabled:opacity-50"
                 >
                   <div className="text-3xl mb-2">👑</div>
                   <div className="text-sm font-bold text-amber-900">Admin</div>
@@ -282,11 +667,11 @@ export function SignInPage() {
 
             {/* Sign Up Link */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[#6B7280]">
                 Don't have an account?{' '}
                 <Link 
                   to="/sign-up" 
-                  className="text-[#667c67] font-bold hover:text-[#546352] hover:underline transition-colors inline-flex items-center gap-1 group"
+                  className="text-[#667c67] font-bold hover:text-[#546352] hover:underline inline-flex items-center gap-1 group"
                 >
                   Create one now
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -294,14 +679,14 @@ export function SignInPage() {
               </p>
             </div>
           </div>
-        </Card>
+        </GlassCard>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-600 mt-6 font-medium">
+        <p className="text-center text-xs text-[#6B7280] mt-6">
           By signing in, you agree to our{' '}
-          <a href="#" className="text-[#667c67] hover:underline">Terms of Service</a>
+          <a href="#" className="text-[#667c67] hover:underline font-medium">Terms of Service</a>
           {' '}and{' '}
-          <a href="#" className="text-[#667c67] hover:underline">Privacy Policy</a>
+          <a href="#" className="text-[#667c67] hover:underline font-medium">Privacy Policy</a>
         </p>
       </motion.div>
     </div>

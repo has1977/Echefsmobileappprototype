@@ -2,30 +2,84 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Card } from '../../components/ui/card';
 import { Logo } from '../../components/shared/Logo';
-import { motion } from 'motion/react';
+import { GlassCard, motion, AnimatePresence } from '../../design-system';
 import { 
-  Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, 
-  AlertCircle, CheckCircle, Loader2, ArrowLeft 
+  Mail, Lock, Eye, EyeOff, User, Smartphone, UserPlus, 
+  AlertCircle, Loader2, ArrowLeft, Shield, ChevronRight, Globe
 } from 'lucide-react';
+
+type SignUpMode = 'email' | 'phone';
+type PhoneStep = 'info' | 'otp';
+
+// Country codes for Kyrgyzstan region
+const COUNTRY_CODES = [
+  { code: '+996', name: 'Kyrgyzstan', flag: '🇰🇬' },
+  { code: '+7', name: 'Russia', flag: '🇷🇺' },
+  { code: '+998', name: 'Uzbekistan', flag: '🇺🇿' },
+  { code: '+992', name: 'Tajikistan', flag: '🇹🇯' },
+  { code: '+993', name: 'Turkmenistan', flag: '🇹🇲' },
+  { code: '+994', name: 'Azerbaijan', flag: '🇦🇿' },
+  { code: '+374', name: 'Armenia', flag: '🇦🇲' },
+  { code: '+995', name: 'Georgia', flag: '🇬🇪' },
+];
 
 export function SignUpPage() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   
+  // Sign up mode
+  const [signUpMode, setSignUpMode] = useState<SignUpMode>('email');
+  
+  // Email Sign Up
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Phone Sign Up
+  const [countryCode, setCountryCode] = useState('+996'); // Default to Kyrgyzstan
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [showCountryCodes, setShowCountryCodes] = useState(false);
+  const [phoneData, setPhoneData] = useState({
+    name: '',
+  });
+  const [phoneStep, setPhoneStep] = useState<PhoneStep>('info');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [resendTimer, setResendTimer] = useState(0);
+  
+  // Common
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Format phone number for Kyrgyzstan
+  const formatPhoneNumber = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    
+    if (countryCode === '+996') {
+      if (digits.length <= 3) return digits;
+      if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
+    }
+    
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
+  };
+
+  const handlePhoneNumberChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setPhoneNumber(formatted);
+  };
+
+  const getFullPhoneNumber = () => {
+    return `${countryCode}${phoneNumber.replace(/\s/g, '')}`;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -34,7 +88,14 @@ export function SignUpPage() {
     }));
   };
 
-  const validateForm = () => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const validateEmailForm = () => {
     if (!formData.name || !formData.email || !formData.password) {
       setError('Please fill in all required fields');
       return false;
@@ -59,11 +120,11 @@ export function SignUpPage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!validateForm()) {
+    if (!validateEmailForm()) {
       return;
     }
 
@@ -72,13 +133,11 @@ export function SignUpPage() {
     const result = await signUp({
       name: formData.name,
       email: formData.email,
-      phone: formData.phone || undefined,
       password: formData.password,
       role: 'customer',
     });
 
     if (result.success) {
-      // Redirect to welcome or branch selection
       navigate('/branch-selection');
     } else {
       setError(result.error || 'Sign up failed');
@@ -86,323 +145,585 @@ export function SignUpPage() {
     }
   };
 
-  const passwordStrength = (password: string) => {
-    if (password.length === 0) return { strength: 0, label: '' };
-    if (password.length < 6) return { strength: 1, label: 'Weak', color: 'bg-destructive' };
-    if (password.length < 10) return { strength: 2, label: 'Medium', color: 'bg-warning' };
-    return { strength: 3, label: 'Strong', color: 'bg-success' };
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (phoneStep === 'info') {
+      if (!phoneData.name || !phoneNumber) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      // Send OTP
+      setIsSubmitting(true);
+      
+      // Simulate sending OTP
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setPhoneStep('otp');
+        setResendTimer(60);
+        
+        // Start countdown
+        const interval = setInterval(() => {
+          setResendTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }, 1000);
+    } else {
+      // Verify OTP and create account
+      setIsSubmitting(true);
+      const otpCode = otp.join('');
+      
+      // Simulate OTP verification
+      setTimeout(async () => {
+        if (otpCode === '123456' || otpCode.length === 6) {
+          // Create account
+          const result = await signUp({
+            name: phoneData.name,
+            phone: getFullPhoneNumber(),
+            password: 'auto-generated', // Auto-generated password for phone signup
+            role: 'customer',
+          });
+          
+          if (result.success) {
+            navigate('/branch-selection');
+          } else {
+            setError('Account creation failed. Please try again.');
+            setIsSubmitting(false);
+          }
+        } else {
+          setError('Invalid OTP. Please try again.');
+          setIsSubmitting(false);
+        }
+      }, 1000);
+    }
   };
 
-  const strength = passwordStrength(formData.password);
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value[0];
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`signup-otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`signup-otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleResendOtp = () => {
+    setOtp(['', '', '', '', '', '']);
+    setResendTimer(60);
+    setError('');
+    
+    // Start countdown
+    const interval = setInterval(() => {
+      setResendTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { strength: 0, label: '', color: '' };
+    if (password.length < 6) return { strength: 33, label: 'Weak', color: 'bg-red-500' };
+    if (password.length < 10) return { strength: 66, label: 'Medium', color: 'bg-yellow-500' };
+    return { strength: 100, label: 'Strong', color: 'bg-green-500' };
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f0eadc] via-white to-[#e4dbc4] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[#667c67]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-80 h-80 bg-[#e4dbc4]/50 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-[#F9FAFB] via-white to-[#FBF8F4] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-md"
       >
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="mb-4"
+          className="mb-6 text-[#667c67] hover:bg-[#667c67]/10 -ml-2"
           onClick={() => navigate('/')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          Back to Home
         </Button>
 
-        <Card className="p-8 shadow-2xl">
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <Logo size="lg" />
+        <GlassCard variant="elevated" className="overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#667c67] to-[#526250] text-white p-8">
+            {/* Logo */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
+                <Logo className="h-8" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="text-center">
+              <h1 className="text-3xl font-bold mb-2">Create Account</h1>
+              <p className="text-white/90">Join us for amazing experiences</p>
+            </div>
           </div>
 
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Create Account</h1>
-            <p className="text-muted-foreground">Join eChefs and start ordering</p>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-2"
-            >
-              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive">{error}</p>
-            </motion.div>
-          )}
-
-          {/* Sign Up Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Full Name <span className="text-destructive">*</span>
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="John Doe"
-                  className="pl-10"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Email <span className="text-destructive">*</span>
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="your@email.com"
-                  className="pl-10"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Phone Number
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+1 (555) 000-0000"
-                  className="pl-10"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Password <span className="text-destructive">*</span>
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="At least 6 characters"
-                  className="pl-10 pr-10"
-                  required
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  disabled={isSubmitting}
+          <div className="p-8">
+            {/* Error Message */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              
-              {/* Password Strength */}
-              {formData.password && (
-                <div className="mt-2">
-                  <div className="flex gap-1 mb-1">
-                    <div className={`h-1 flex-1 rounded ${strength.strength >= 1 ? strength.color : 'bg-gray-200'}`} />
-                    <div className={`h-1 flex-1 rounded ${strength.strength >= 2 ? strength.color : 'bg-gray-200'}`} />
-                    <div className={`h-1 flex-1 rounded ${strength.strength >= 3 ? strength.color : 'bg-gray-200'}`} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Password strength: {strength.label}
-                  </p>
-                </div>
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800 font-medium">{error}</p>
+                </motion.div>
               )}
+            </AnimatePresence>
+
+            {/* Sign Up Mode Toggle */}
+            <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-[#F9FAFB] rounded-xl">
+              <button
+                onClick={() => {
+                  setSignUpMode('email');
+                  setError('');
+                  setPhoneStep('info');
+                }}
+                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  signUpMode === 'email'
+                    ? 'bg-white text-[#667c67] shadow-md'
+                    : 'text-[#6B7280] hover:text-[#374151]'
+                }`}
+              >
+                <Mail className="w-4 h-4 inline-block mr-2" />
+                Email
+              </button>
+              <button
+                onClick={() => {
+                  setSignUpMode('phone');
+                  setError('');
+                }}
+                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+                  signUpMode === 'phone'
+                    ? 'bg-white text-[#667c67] shadow-md'
+                    : 'text-[#6B7280] hover:text-[#374151]'
+                }`}
+              >
+                <Smartphone className="w-4 h-4 inline-block mr-2" />
+                Phone
+              </button>
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Confirm Password <span className="text-destructive">*</span>
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Re-enter your password"
-                  className="pl-10 pr-10"
-                  required
-                  disabled={isSubmitting}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  disabled={isSubmitting}
+            {/* Email Sign Up Form */}
+            <AnimatePresence mode="wait">
+              {signUpMode === 'email' && (
+                <motion.form
+                  key="email-signup"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleEmailSubmit}
+                  className="space-y-5"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              
-              {/* Password Match Indicator */}
-              {formData.confirmPassword && (
-                <div className="mt-2 flex items-center gap-2">
-                  {formData.password === formData.confirmPassword ? (
+                  {/* Name */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="John Doe"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="your@email.com"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Create a strong password"
+                        className="w-full pl-12 pr-12 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#667c67] transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    
+                    {/* Password Strength */}
+                    {formData.password && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-[#6B7280]">Password Strength:</span>
+                          <span className={`text-xs font-bold ${
+                            passwordStrength.strength === 100 ? 'text-green-600' :
+                            passwordStrength.strength === 66 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {passwordStrength.label}
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-[#E5E7EB] rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${passwordStrength.strength}%` }}
+                            className={`h-full ${passwordStrength.color} transition-all`}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Re-enter your password"
+                        className="w-full pl-12 pr-12 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                        required
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#667c67] transition-colors"
+                        disabled={isSubmitting}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5 mr-2" />
+                        Create Account
+                      </>
+                    )}
+                  </Button>
+                </motion.form>
+              )}
+
+              {/* Phone Sign Up Form */}
+              {signUpMode === 'phone' && (
+                <motion.form
+                  key="phone-signup"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handlePhoneSubmit}
+                  className="space-y-5"
+                >
+                  {phoneStep === 'info' ? (
                     <>
-                      <CheckCircle className="w-4 h-4 text-success" />
-                      <p className="text-xs text-success">Passwords match</p>
+                      {/* Name */}
+                      <div>
+                        <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                          Full Name
+                        </label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                          <input
+                            type="text"
+                            name="name"
+                            value={phoneData.name}
+                            onChange={handlePhoneChange}
+                            placeholder="John Doe"
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Phone Number */}
+                      <div>
+                        <label className="text-sm font-semibold mb-2 block text-[#374151]">
+                          Phone Number
+                        </label>
+                        
+                        {/* Country Code Selector */}
+                        <div className="relative mb-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowCountryCodes(!showCountryCodes)}
+                            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] hover:border-[#667c67] transition-all"
+                            disabled={isSubmitting}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-5 h-5 text-[#9CA3AF]" />
+                              <span className="text-sm font-medium text-[#374151]">
+                                {COUNTRY_CODES.find(c => c.code === countryCode)?.flag}{' '}
+                                {COUNTRY_CODES.find(c => c.code === countryCode)?.name}{' '}
+                                <span className="text-[#667c67]">({countryCode})</span>
+                              </span>
+                            </div>
+                            <ChevronRight className={`w-4 h-4 text-[#9CA3AF] transition-transform ${showCountryCodes ? 'rotate-90' : ''}`} />
+                          </button>
+                          
+                          {/* Country Codes Dropdown */}
+                          <AnimatePresence>
+                            {showCountryCodes && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute z-10 w-full mt-2 bg-white border-2 border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden"
+                              >
+                                <div className="max-h-64 overflow-y-auto">
+                                  {COUNTRY_CODES.map(country => (
+                                    <button
+                                      key={country.code}
+                                      type="button"
+                                      onClick={() => {
+                                        setCountryCode(country.code);
+                                        setShowCountryCodes(false);
+                                        setPhoneNumber(''); // Reset phone number on country change
+                                      }}
+                                      className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F9FAFB] transition-colors ${
+                                        countryCode === country.code ? 'bg-[#667c67]/10' : ''
+                                      }`}
+                                    >
+                                      <span className="text-2xl">{country.flag}</span>
+                                      <div className="flex-1 text-left">
+                                        <div className="text-sm font-medium text-[#374151]">{country.name}</div>
+                                        <div className="text-xs text-[#6B7280]">{country.code}</div>
+                                      </div>
+                                      {countryCode === country.code && (
+                                        <div className="w-2 h-2 rounded-full bg-[#667c67]" />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        
+                        {/* Phone Input */}
+                        <div className="relative">
+                          <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                          <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                            placeholder={countryCode === '+996' ? '700 123 456' : '123 456 789'}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <p className="text-xs text-[#6B7280] mt-2">
+                          {countryCode === '+996' 
+                            ? 'Kyrgyzstan mobile number (9 digits)' 
+                            : 'Enter your mobile number'}
+                        </p>
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
+                        disabled={isSubmitting || !phoneData.name || !phoneNumber}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Sending Code...
+                          </>
+                        ) : (
+                          <>
+                            <Smartphone className="w-5 h-5 mr-2" />
+                            Send Verification Code
+                          </>
+                        )}
+                      </Button>
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-4 h-4 text-destructive" />
-                      <p className="text-xs text-destructive">Passwords do not match</p>
+                      {/* OTP Input */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-sm font-semibold text-[#374151]">
+                            Verification Code
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setPhoneStep('info')}
+                            className="text-xs text-[#667c67] hover:underline font-semibold"
+                          >
+                            Change Number
+                          </button>
+                        </div>
+                        
+                        <p className="text-sm text-[#6B7280] mb-4">
+                          Code sent to <span className="font-semibold text-[#374151]">{getFullPhoneNumber()}</span>
+                        </p>
+
+                        <div className="flex gap-2 justify-between mb-4">
+                          {otp.map((digit, index) => (
+                            <input
+                              key={index}
+                              id={`signup-otp-${index}`}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => handleOtpChange(index, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                              className="w-full aspect-square text-center text-2xl font-bold rounded-xl bg-[#F9FAFB] border-2 border-[#E5E7EB] focus:border-[#667c67] focus:bg-white outline-none transition-all"
+                              disabled={isSubmitting}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Resend OTP */}
+                        <div className="text-center">
+                          {resendTimer > 0 ? (
+                            <p className="text-sm text-[#6B7280]">
+                              Resend code in <span className="font-bold text-[#667c67]">{resendTimer}s</span>
+                            </p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleResendOtp}
+                              className="text-sm text-[#667c67] hover:text-[#546352] font-semibold hover:underline"
+                            >
+                              Resend Code
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-[#667c67] to-[#526250] hover:shadow-xl h-12 text-base font-semibold"
+                        disabled={isSubmitting || otp.join('').length !== 6}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-5 h-5 mr-2" />
+                            Verify & Create Account
+                          </>
+                        )}
+                      </Button>
                     </>
                   )}
-                </div>
+                </motion.form>
               )}
-            </div>
+            </AnimatePresence>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full bg-[#667c67] hover:bg-[#526250] h-12 mt-6"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Create Account
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-muted-foreground">Or sign up with</span>
+            {/* Sign In Link */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-[#6B7280]">
+                Already have an account?{' '}
+                <Link 
+                  to="/sign-in" 
+                  className="text-[#667c67] font-bold hover:text-[#546352] hover:underline inline-flex items-center gap-1 group"
+                >
+                  Sign in
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </p>
             </div>
           </div>
-
-          {/* Social Sign Up Buttons */}
-          <div className="space-y-2">
-            {/* Google Sign Up */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 border-2 hover:bg-gray-50"
-              onClick={() => {
-                alert('Google Sign-Up integration would go here. You can also use the demo accounts from the Sign In page.');
-              }}
-              disabled={isSubmitting}
-            >
-              <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              Sign up with Google
-            </Button>
-
-            {/* Facebook Sign Up */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 border-2 hover:bg-gray-50"
-              onClick={() => {
-                alert('Facebook Sign-Up integration would go here. You can also use the demo accounts from the Sign In page.');
-              }}
-              disabled={isSubmitting}
-            >
-              <svg className="w-5 h-5 mr-3" fill="#1877F2" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              Sign up with Facebook
-            </Button>
-
-            {/* Apple Sign Up */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 border-2 hover:bg-gray-50"
-              onClick={() => {
-                alert('Apple Sign-Up integration would go here. You can also use the demo accounts from the Sign In page.');
-              }}
-              disabled={isSubmitting}
-            >
-              <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-              </svg>
-              Sign up with Apple
-            </Button>
-          </div>
-
-          {/* Sign In Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link 
-                to="/sign-in" 
-                className="text-[#667c67] font-medium hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </Card>
+        </GlassCard>
 
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          By creating an account, you agree to our Terms of Service and Privacy Policy
+        <p className="text-center text-xs text-[#6B7280] mt-6">
+          By creating an account, you agree to our{' '}
+          <a href="#" className="text-[#667c67] hover:underline font-medium">Terms of Service</a>
+          {' '}and{' '}
+          <a href="#" className="text-[#667c67] hover:underline font-medium">Privacy Policy</a>
         </p>
       </motion.div>
     </div>
