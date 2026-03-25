@@ -10,7 +10,7 @@ import {
   Star, ChevronRight, Crown, Tag, Gift, Package,
   Activity, CheckCircle2, AlertCircle, Target, Zap,
   Bell, Settings, Sparkles, FileText, Heart, UserCircle,
-  Palette, TestTube
+  Palette, TestTube, MessageSquare, ChefHat, Coffee
 } from 'lucide-react';
 import { getAdminStats } from '../../services/adminData';
 
@@ -200,6 +200,46 @@ export function AdminDashboard() {
       path: '/admin/data-test',
       color: 'from-emerald-500 to-green-600',
       stats: 'Dev tools',
+    },
+    {
+      title: 'Ratings Management',
+      description: 'Customer feedback & reviews',
+      icon: Star,
+      path: '/admin/ratings',
+      color: 'from-yellow-500 to-orange-600',
+      stats: 'Manage feedback',
+    },
+    {
+      title: 'Support Messages',
+      description: 'Customer inquiries & issues',
+      icon: MessageSquare,
+      path: '/admin/support',
+      color: 'from-blue-500 to-cyan-600',
+      stats: 'View messages',
+    },
+    {
+      title: 'Department Management',
+      description: 'Kitchen departments & staff',
+      icon: ChefHat,
+      path: '/admin/departments',
+      color: 'from-red-500 to-pink-600',
+      stats: 'Manage departments',
+    },
+    {
+      title: 'Waiter Management',
+      description: 'Waiters, schedules & performance',
+      icon: Coffee,
+      path: '/admin/waiters',
+      color: 'from-amber-500 to-orange-600',
+      stats: 'Manage waiters',
+    },
+    {
+      title: 'Kitchen Display System',
+      description: 'Real-time order tracking (KDS)',
+      icon: ChefHat,
+      path: '/kitchen',
+      color: 'from-indigo-500 to-purple-600',
+      stats: 'View KDS',
     },
   ];
 

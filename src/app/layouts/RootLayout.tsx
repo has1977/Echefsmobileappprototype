@@ -11,10 +11,10 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 
 /**
  * RootLayout - Top-level layout for all routes
- * Updated: March 24, 2026 - Build 3.3.3 - Added ErrorBoundary
+ * Updated: March 25, 2026 - Build 3.3.5 - Fixed import cache issues
  */
 export function RootLayout() {
-  console.log('🟡 RootLayout rendering with providers');
+  console.log('🟡 RootLayout rendering with providers - Build 3.3.5');
   
   // Set viewport meta tag for mobile responsiveness
   useEffect(() => {

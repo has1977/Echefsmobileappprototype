@@ -51,7 +51,7 @@ interface SupportMessage {
   orderTotal: number;
 }
 
-export function RatingsManagementPage() {
+export function AdminRatings() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { selectedBranch, branches } = useApp();
@@ -193,7 +193,7 @@ export function RatingsManagementPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Button
-                onClick={() => navigate('/control-panel')}
+                onClick={() => navigate('/admin')}
                 variant="outline"
                 size="sm"
                 className="text-white border-white/30 hover:bg-white/10"

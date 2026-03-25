@@ -608,4 +608,7 @@ class DatabaseService {
   }
 }
 
-export const db = new DatabaseService();
+const db = new DatabaseService();
+
+export { db };
+export default db;

@@ -39,7 +39,7 @@ export function RevenueChart({
   chartType = 'area',
 }: RevenueChartProps) {
   const isPositiveGrowth = growth !== undefined && growth >= 0;
-  const gradientId = useId(); // Generate unique ID for gradient
+  const gradientId = `gradient-${useId()}`; // Generate unique ID for gradient with prefix
 
   // Ensure data is always an array
   const chartData = Array.isArray(data) ? data : [];

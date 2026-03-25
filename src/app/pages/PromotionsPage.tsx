@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { motion, AnimatePresence } from 'motion/react';
+import { GradientButton } from '../design-system';
 import {
   Tag, Gift, Crown, Star, ChevronLeft, Copy, Check, 
   Zap, Calendar, Clock, ArrowRight, Sparkles, DollarSign, 
   Package, Percent, ChevronRight, Search, ShoppingCart, 
-  CheckCircle2, Building2, Lock, Share2, TrendingUp, Award,
-  X, Info, ExternalLink, Timer, CircleDot, Flame, Target
+  CheckCircle2, Building2, Lock, TrendingUp, Award,
+  X, Flame, Target, Heart, Users
 } from 'lucide-react';
 
 // Import data
@@ -25,9 +25,7 @@ import {
 
 import {
   branchCustomerLoyalty,
-  branchPointsTransactions,
   getCustomerLoyaltyForBranch,
-  getBranchTransactions,
   getCustomerBranches,
   getBranchPromotions,
   getBranchGifts,
@@ -35,10 +33,8 @@ import {
   getAllGifts,
 } from '../services/branchLoyaltyData';
 
-import { db } from '../lib/database';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
-import { GlassCard, GradientButton } from '../design-system';
 
 export function PromotionsPage() {
   try {
@@ -76,28 +72,20 @@ export function PromotionsPage() {
     const currentBranch = branches.find(b => b.id === branchId);
     
     // Early return if no branch found
-    if (!branchId) {
+    if (!branchId || !currentBranch) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#FBF8F4]">
-          <GlassCard variant="elevated" className="p-8 text-center max-w-md">
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-md">
             <Building2 className="w-16 h-16 text-[#667c67] mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-4">No Branch Selected</h2>
             <p className="text-gray-600 mb-6">Please select a branch first</p>
-            <GradientButton onClick={() => navigate('/branch-selection')}>Select Branch</GradientButton>
-          </GlassCard>
-        </div>
-      );
-    }
-    
-    if (!currentBranch) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#FBF8F4]">
-          <GlassCard variant="elevated" className="p-8 text-center max-w-md">
-            <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Branch Not Found</h2>
-            <p className="text-gray-600 mb-4">Branch ID: {branchId}</p>
-            <GradientButton onClick={() => navigate('/branch-selection')}>Select Branch</GradientButton>
-          </GlassCard>
+            <button 
+              onClick={() => navigate('/branch-selection')}
+              className="bg-[#667c67] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#546352] transition-all"
+            >
+              Select Branch
+            </button>
+          </div>
         </div>
       );
     }
@@ -951,7 +939,7 @@ export function PromotionsPage() {
     console.error('PromotionsPage error:', error);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#FBF8F4] p-5">
-        <GlassCard variant="elevated" className="p-8 text-center max-w-md">
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center max-w-md">
           <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <X className="w-10 h-10 text-red-600" />
           </div>
@@ -960,7 +948,7 @@ export function PromotionsPage() {
           <GradientButton onClick={() => window.location.reload()}>
             Reload Page
           </GradientButton>
-        </GlassCard>
+        </div>
       </div>
     );
   }

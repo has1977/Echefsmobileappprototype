@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { 
   Search, Plus, Star, Flame, Sparkles, Tag, Heart, 
   UtensilsCrossed, Coffee, Cake, Users, FolderTree, ChevronRight,
-  Clock, TrendingUp, Filter, X, Leaf, Wheat, ChefHat, Grid3x3, List, LayoutGrid, Check
+  Clock, TrendingUp, Filter, X, Leaf, Wheat, ChefHat, Grid3x3, List, LayoutGrid, Check, Award, Crown
 } from 'lucide-react';
 import { GlassCard, GradientButton, Chip, EmptyState, motion, AnimatePresence } from '../design-system';
 import type { MenuType } from '../lib/types';
@@ -225,6 +225,8 @@ export function MenuPage() {
     popular: { icon: Star, color: '#F59E0B', bgColor: '#FEF3C7', label: t.popular },
     recommended: { icon: Heart, color: '#DC2626', bgColor: '#FEE2E2', label: t.recommended },
     spicy: { icon: Flame, color: '#DC2626', bgColor: '#FEE2E2', label: t.spicy },
+    featured: { icon: Award, color: '#7C3AED', bgColor: '#EDE9FE', label: 'Featured' },
+    premium: { icon: Crown, color: '#D97706', bgColor: '#FEF3C7', label: 'Premium' },
   };
 
   const filteredCategories = categories.filter(c => c.menuType === currentMenuType && c.enabled);
@@ -465,7 +467,7 @@ export function MenuPage() {
                   <h4 className="text-sm font-bold text-gray-900 mb-2">{t.dietary}</h4>
                   <div className="flex flex-wrap gap-2">
                     {[
-                      { key: 'vegan', icon: Leaf },
+                      { key: 'vegan', icon: Leaf, label: t.vegan },
                       { key: 'gluten-free', icon: Wheat, label: t.glutenFree },
                     ].map(item => (
                       <motion.button
@@ -479,7 +481,7 @@ export function MenuPage() {
                         }`}
                       >
                         <item.icon className="w-4 h-4" />
-                        {item.label || t[item.key as keyof typeof t]}
+                        {item.label}
                       </motion.button>
                     ))}
                   </div>
@@ -645,19 +647,53 @@ export function MenuPage() {
                           <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                             {item.translations[currentLanguage]?.description || item.translations['en']?.description || ''}
                           </p>
+                          
+                          {/* Dietary Tags */}
+                          {item.dietaryTags && item.dietaryTags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                              {item.dietaryTags.map((tag: string, idx: number) => (
+                                <div key={idx} className="px-2 py-0.5 rounded-full border border-gray-300 flex items-center gap-1">
+                                  {tag === 'vegan' && <Leaf className="w-3 h-3 text-green-600" />}
+                                  {tag === 'gluten-free' && <Wheat className="w-3 h-3 text-amber-600" />}
+                                  <span className="text-xs text-gray-600">{tag}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-xl font-bold text-gray-900">
-                              ${item.price.toFixed(2)}
-                            </span>
-                            {item.prepTime && (
-                              <span className="text-xs text-gray-500 flex items-center gap-0.5">
-                                <Clock className="w-3 h-3" />
-                                {item.prepTime}m
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-xl font-bold text-gray-900">
+                                ${item.price.toFixed(2)}
                               </span>
-                            )}
+                              {item.originalPrice && item.originalPrice > item.price && (
+                                <>
+                                  <span className="text-sm text-gray-400 line-through">
+                                    ${item.originalPrice.toFixed(2)}
+                                  </span>
+                                  <span className="px-1.5 py-0.5 bg-green-500 text-white text-xs font-bold rounded">
+                                    -{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}%
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-3 text-gray-500">
+                              {item.prepTime && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="text-xs font-medium">{item.prepTime}m</span>
+                                </div>
+                              )}
+                              {item.calories && (
+                                <div className="flex items-center gap-1">
+                                  <Flame className="w-4 h-4 text-orange-500" />
+                                  <span className="text-xs font-medium">{item.calories} cal</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <motion.button
@@ -714,7 +750,12 @@ export function MenuPage() {
                             <span className="text-xs font-bold text-gray-900">{item.rating.toFixed(1)}</span>
                           </div>
                         )}
-                        {item.badges && item.badges[0] && badgeConfig[item.badges[0]] && (
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-green-500 text-white text-xs font-bold rounded shadow-sm">
+                            -{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}%
+                          </div>
+                        )}
+                        {item.badges && item.badges[0] && badgeConfig[item.badges[0]] && !item.originalPrice && (
                           <div
                             className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md shadow-sm"
                             style={{ backgroundColor: badgeConfig[item.badges[0]].bgColor }}
@@ -731,17 +772,48 @@ export function MenuPage() {
                         <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
                           {item.translations[currentLanguage]?.name || item.translations['en']?.name || 'Dish'}
                         </h3>
-                        <div className="flex items-center justify-between gap-2 mb-2">
+                        
+                        {/* Price */}
+                        <div className="flex items-baseline gap-1 mb-2">
                           <span className="text-lg font-bold text-gray-900">
                             ${item.price.toFixed(2)}
                           </span>
-                          {item.prepTime && (
-                            <span className="text-xs text-gray-500 flex items-center gap-0.5">
-                              <Clock className="w-3 h-3" />
-                              {item.prepTime}m
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <span className="text-xs text-gray-400 line-through">
+                              ${item.originalPrice.toFixed(2)}
                             </span>
                           )}
                         </div>
+                        
+                        {/* Time & Calories */}
+                        <div className="flex items-center justify-between text-gray-500 mb-2 text-xs">
+                          {item.prepTime && (
+                            <div className="flex items-center gap-0.5">
+                              <Clock className="w-3 h-3" />
+                              <span>{item.prepTime}m</span>
+                            </div>
+                          )}
+                          {item.calories && (
+                            <div className="flex items-center gap-0.5">
+                              <Flame className="w-3 h-3 text-orange-500" />
+                              <span>{item.calories} cal</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Dietary Tags */}
+                        {item.dietaryTags && item.dietaryTags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {item.dietaryTags.slice(0, 2).map((tag: string, idx: number) => (
+                              <div key={idx} className="px-1.5 py-0.5 rounded-full border border-gray-300 flex items-center gap-0.5">
+                                {tag === 'vegan' && <Leaf className="w-2.5 h-2.5 text-green-600" />}
+                                {tag === 'gluten-free' && <Wheat className="w-2.5 h-2.5 text-amber-600" />}
+                                <span className="text-[10px] text-gray-600">{tag}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           onClick={(e) => {
@@ -824,52 +896,81 @@ export function MenuPage() {
                       <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2">
                         {item.translations[currentLanguage]?.name || item.translations['en']?.name || 'Dish'}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                         {item.translations[currentLanguage]?.description || item.translations['en']?.description || ''}
                       </p>
-
-                      {/* Bottom */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500 mb-0.5">{t.from}</span>
-                          <span className="text-2xl font-bold text-gray-900">
-                            ${item.price.toFixed(2)}
-                          </span>
-                        </div>
-
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuickAdd(item);
-                          }}
-                          className={`h-11 px-6 rounded-xl flex items-center gap-2 font-semibold text-sm transition-all ${
-                            isAdded
-                              ? 'bg-green-500 text-white shadow-lg'
-                              : 'bg-[#FF6B35] hover:bg-[#FF5722] text-white shadow-md hover:shadow-lg'
-                          }`}
-                        >
-                          {isAdded ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              <span>{t.added}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-4 h-4" />
-                              <span>{t.addToCart}</span>
-                            </>
-                          )}
-                        </motion.button>
+                      
+                      {/* Price Section */}
+                      <div className="flex items-baseline gap-2 mb-3">
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${item.price.toFixed(2)}
+                        </span>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <>
+                            <span className="text-sm text-gray-400 line-through">
+                              ${item.originalPrice.toFixed(2)}
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-green-500 text-white text-xs font-bold rounded">
+                              -{Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}%
+                            </span>
+                          </>
+                        )}
                       </div>
-
-                      {/* Prep Time */}
-                      {item.prepTime && (
-                        <div className="flex items-center gap-1 text-gray-500 mt-3 pt-3 border-t border-gray-100">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-xs font-medium">{item.prepTime} min</span>
+                      
+                      {/* Time & Calories */}
+                      <div className="flex items-center gap-4 mb-3">
+                        {item.prepTime && (
+                          <div className="flex items-center gap-1.5 text-gray-500">
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">{item.prepTime}m</span>
+                          </div>
+                        )}
+                        {item.calories && (
+                          <div className="flex items-center gap-1.5 text-gray-500">
+                            <Flame className="w-4 h-4 text-orange-500" />
+                            <span className="text-sm font-medium">{item.calories} cal</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Dietary Tags */}
+                      {item.dietaryTags && item.dietaryTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {item.dietaryTags.map((tag: string, idx: number) => (
+                            <div key={idx} className="px-2 py-1 rounded-full border border-gray-300 flex items-center gap-1">
+                              {tag === 'vegan' && <Leaf className="w-3.5 h-3.5 text-green-600" />}
+                              {tag === 'gluten-free' && <Wheat className="w-3.5 h-3.5 text-amber-600" />}
+                              <span className="text-xs text-gray-600">{tag}</span>
+                            </div>
+                          ))}
                         </div>
                       )}
+
+                      {/* Add Button */}
+                      <motion.button
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuickAdd(item);
+                        }}
+                        className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm transition-all ${
+                          isAdded
+                            ? 'bg-green-500 text-white shadow-lg'
+                            : 'bg-[#FF6B35] hover:bg-[#FF5722] text-white shadow-md hover:shadow-lg'
+                        }`}
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>{t.added}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>{t.addToCart}</span>
+                          </>
+                        )}
+                      </motion.button>
                     </div>
                   </motion.div>
                 );

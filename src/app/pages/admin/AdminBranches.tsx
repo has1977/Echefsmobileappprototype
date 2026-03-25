@@ -318,7 +318,7 @@ export function AdminBranches() {
                         variant="outline"
                         size="sm"
                         className="flex-1"
-                        onClick={() => navigate(`/admin/branches/${branch.id}/edit`)}
+                        onClick={() => navigate(`/admin/branches/${branch.id}`)}
                       >
                         <Edit2 className="w-4 h-4 mr-2" />
                         Edit

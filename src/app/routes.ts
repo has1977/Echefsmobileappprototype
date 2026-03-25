@@ -1,8 +1,8 @@
 /**
  * eChefs Routing Configuration
  * React Router v7 Data Mode
- * Last updated: March 19, 2026 14:30 UTC - Provider fix applied
- * Build version: 3.3.1
+ * Last updated: March 25, 2026 16:30 UTC - Fixed import cache issues
+ * Build version: 3.3.5
  */
 import { createBrowserRouter } from 'react-router';
 import { RootLayout } from './layouts/RootLayout';
@@ -41,6 +41,8 @@ import { UnifiedControlPanel } from './pages/UnifiedControlPanel';
 import { DevTools } from './pages/DevTools';
 import { TestSessionResetPage } from './pages/TestSessionResetPage';
 import { OrderManagementPage } from './pages/OrderManagementPage';
+import { ResetDataPage } from './pages/ResetDataPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // Manager Pages (still accessible from control panel)
 import { ManagerMenuManagement } from './pages/manager/ManagerMenuManagement';
@@ -63,7 +65,7 @@ import { AdminDataTest } from './pages/admin/AdminDataTest';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 import { AdminLanguages } from './pages/admin/AdminLanguages';
-import { AdminMenuManagement } from './pages/admin/AdminMenuManagement';
+import { AdminMenuManagementNew } from './pages/admin/AdminMenuManagementNew';
 import { BrandStyleGuide } from './pages/admin/BrandStyleGuide';
 import { AdminNotifications } from './pages/admin/AdminNotifications';
 import { AdminPromotions } from './pages/admin/AdminPromotions';
@@ -77,10 +79,8 @@ import { AdminLoyaltyNew } from './pages/admin/AdminLoyaltyNew';
 import { AdminLoyaltySettings } from './pages/admin/AdminLoyaltySettings';
 import { StyleGuidePage } from './pages/admin/StyleGuidePage';
 import { AdminCurrency } from './pages/admin/AdminCurrency';
-
-// Control Panel Pages
-import { RatingsManagementPage } from './pages/control-panel/RatingsManagementPage';
-import { SupportMessagesPage } from './pages/control-panel/SupportMessagesPage';
+import { AdminRatings } from './pages/admin/AdminRatings';
+import { AdminSupport } from './pages/admin/AdminSupport';
 
 // Loyalty & Promotions Additions
 import {
@@ -98,8 +98,15 @@ import {
 import { TableCheckInPage } from './pages/TableCheckInPage';
 import { StaffCheckInDashboard } from './pages/StaffCheckInDashboard';
 
-// 404 Page
-import { NotFoundPage } from './pages/NotFoundPage';
+// Department & Waiter Management
+import { AdminDepartments } from './pages/admin/AdminDepartments';
+import { AdminWaiters } from './pages/admin/AdminWaiters';
+import { DepartmentDashboard } from './pages/DepartmentDashboard';
+import { WaiterDashboard } from './pages/WaiterDashboard';
+import { WaiterOrderTaking } from './pages/WaiterOrderTaking';
+import { WaiterScanTable } from './pages/WaiterScanTable';
+import { RateWaiterPage } from './pages/RateWaiterPage';
+import { KitchenDisplayPage } from './pages/KitchenDisplayPage';
 
 export const router = createBrowserRouter([
   {
@@ -113,11 +120,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'control-panel/ratings',
-        Component: RatingsManagementPage,
+        Component: AdminRatings,
       },
       {
         path: 'control-panel/support-messages',
-        Component: SupportMessagesPage,
+        Component: AdminSupport,
       },
       {
         path: 'dev-tools',
@@ -127,6 +134,10 @@ export const router = createBrowserRouter([
         path: 'test-session-reset',
         Component: TestSessionResetPage,
       },
+      {
+        path: 'reset-data',
+        Component: ResetDataPage,
+      },
       // Removed duplicate OrderManagementPage - now only in MobileLayout
       {
         path: 'admin',
@@ -135,7 +146,7 @@ export const router = createBrowserRouter([
           { path: 'settings', Component: AdminSettings },
           { path: 'languages', Component: AdminLanguages },
           { path: 'currency', Component: AdminCurrency },
-          { path: 'menu', Component: AdminMenuManagement },
+          { path: 'menu', Component: AdminMenuManagementNew },
           { path: 'branches', Component: AdminBranches },
           { path: 'branches/:branchId', Component: AdminBranchEditor },
           { path: 'table-management', Component: AdminTableManagement },
@@ -151,6 +162,11 @@ export const router = createBrowserRouter([
           { path: 'brand-guide', Component: BrandStyleGuide },
           { path: 'style-guide', Component: StyleGuidePage },
           { path: 'data-test', Component: AdminDataTest },
+          { path: 'ratings', Component: AdminRatings },
+          { path: 'support', Component: AdminSupport },
+          // Department & Waiter Management
+          { path: 'departments', Component: AdminDepartments },
+          { path: 'waiters', Component: AdminWaiters },
           // Inventory Management Routes
           { path: 'inventory', Component: InventoryDashboard },
           { path: 'inventory/ingredients', Component: IngredientList },
@@ -174,6 +190,45 @@ export const router = createBrowserRouter([
         path: 'manager/loyalty-promotions',
         Component: ManagerLoyaltyPromotions,
       },
+      
+      // Department Routes (direct children, bypass MobileLayout)
+      {
+        path: 'department/:departmentId',
+        Component: DepartmentDashboard,
+      },
+      
+      // Kitchen Display System
+      {
+        path: 'kitchen',
+        Component: KitchenDisplayPage,
+      },
+      {
+        path: 'kitchen/:branchId',
+        Component: KitchenDisplayPage,
+      },
+      
+      // Waiter Routes (direct children, bypass MobileLayout)
+      {
+        path: 'waiter/dashboard',
+        Component: WaiterDashboard,
+      },
+      {
+        path: 'waiter/new-order',
+        Component: WaiterOrderTaking,
+      },
+      {
+        path: 'waiter/new-order/:tableId',
+        Component: WaiterOrderTaking,
+      },
+      {
+        path: 'waiter/scan-table',
+        Component: WaiterScanTable,
+      },
+      {
+        path: 'waiter/rate',
+        Component: RateWaiterPage,
+      },
+      
       // Customer Routes (wrapped in MobileLayout)
       {
         path: '/',

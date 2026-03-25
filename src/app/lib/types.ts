@@ -31,8 +31,10 @@ export interface MenuItem {
   categoryId: string;
   menuType: MenuType;
   price: number;
+  originalPrice?: number; // For showing discounts
   imageUrl: string;
-  badges: ('hot' | 'new' | 'discount' | 'popular' | 'recommended' | 'vegan' | 'gluten-free' | 'spicy')[];
+  badges: ('hot' | 'new' | 'discount' | 'popular' | 'recommended' | 'vegan' | 'gluten-free' | 'spicy' | 'featured' | 'premium')[];
+  dietaryTags?: ('vegan' | 'vegetarian' | 'gluten-free' | 'dairy-free' | 'keto' | 'halal')[];
   modifiers: Modifier[];
   allergens?: string[];
   calories?: number;

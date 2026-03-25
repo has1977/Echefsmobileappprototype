@@ -4,6 +4,7 @@ import { db } from '../lib/database';
 import { toast } from 'sonner';
 import { ArrowLeft, Database, RefreshCw, Trash2, CheckCircle } from 'lucide-react';
 import { GlassCard } from '../design-system';
+import { Button } from '../design-system';
 
 /**
  * Developer Tools Page

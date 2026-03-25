@@ -19,4 +19,34 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  
+  // Cache busting and optimization
+  build: {
+    // Increase build version to force fresh cache
+    rollupOptions: {
+      output: {
+        // Add hash to filenames for better cache busting
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash].[ext]`,
+        manualChunks: undefined
+      }
+    },
+    // Clear old chunks
+    chunkSizeWarningLimit: 1000,
+    sourcemap: false
+  },
+  
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router', 'motion/react'],
+    force: true
+  },
+  
+  // Server configuration to prevent caching issues
+  server: {
+    fs: {
+      strict: false
+    }
+  }
 })

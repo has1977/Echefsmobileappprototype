@@ -111,6 +111,7 @@ export function OrderTrackingPage() {
       myOrders: 'My Orders',
       viewAllOrders: 'View All Orders',
       orderAgain: 'Order Again',
+      rateWaiter: 'Rate Service',
     },
     ar: {
       title: 'تتبع الطلب',
@@ -149,6 +150,7 @@ export function OrderTrackingPage() {
       myOrders: 'طلباتي',
       viewAllOrders: 'عرض جميع الطلبات',
       orderAgain: 'اطلب مرة أخرى',
+      rateWaiter: 'قيّم الخدمة',
     },
     ru: {
       title: 'Отслеживание заказа',
@@ -557,7 +559,16 @@ export function OrderTrackingPage() {
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg z-20">
         {order.status === 'completed' || order.status === 'cancelled' ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <Button
+              onClick={() => navigate('/waiter/rate', { state: { orderId: order.id } })}
+              variant="outline"
+              size="lg"
+              className="gap-2"
+            >
+              <Star className="w-5 h-5" />
+              {t.rateWaiter}
+            </Button>
             <Button
               onClick={() => navigate('/branch-selection')}
               variant="outline"

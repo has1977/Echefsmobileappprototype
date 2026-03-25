@@ -27,7 +27,7 @@ interface SupportMessage {
   orderTotal: number;
 }
 
-export function SupportMessagesPage() {
+export function AdminSupport() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { selectedBranch } = useApp();
@@ -157,7 +157,7 @@ export function SupportMessagesPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Button
-                onClick={() => navigate('/control-panel')}
+                onClick={() => navigate('/admin')}
                 variant="outline"
                 size="sm"
                 className="text-white border-white/30 hover:bg-white/10"
