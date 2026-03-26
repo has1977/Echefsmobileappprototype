@@ -8,7 +8,7 @@ import {
   Table2, Grid3x3, List, LayoutGrid, Filter, MapPin, ChevronDown,
   ChevronUp, Edit2, Clock, DollarSign, User, Home, Building2,
   Sparkles, Star, Award, Flame, Leaf, Crown, Package, AlertCircle, Globe,
-  Heart, Share2, Info
+  Heart, Share2, Info, Grid2x2, Columns2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -671,8 +671,23 @@ export function WaiterOrderTaking() {
   });
 
   const availableCategories = categories.filter(cat => {
-    return menuItems.some(item => item.category === cat.id && item.menu_type === currentMenuType);
+    const hasItems = menuItems.some(item => item.category === cat.id && item.menu_type === currentMenuType);
+    return hasItems;
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('📊 Menu Debug Info:');
+    console.log('Current language:', i18n.language);
+    console.log('Categories loaded:', categories.length, categories);
+    console.log('Menu items loaded:', menuItems.length);
+    console.log('Current menu type:', currentMenuType);
+    console.log('Available categories for current type:', availableCategories.length, availableCategories);
+    console.log('Filtered items:', filteredItems.length);
+    if (availableCategories.length > 0) {
+      console.log('First category example:', availableCategories[0]);
+    }
+  }, [categories, menuItems, currentMenuType, availableCategories, filteredItems, i18n.language]);
 
   const addToCart = (item: MenuItem, modifiers: SelectedModifier[] = []) => {
     // Calculate total price with modifiers
@@ -1050,30 +1065,87 @@ export function WaiterOrderTaking() {
                 })}
               </div>
 
-              {/* Categories */}
+              {/* Categories with Icons */}
               <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full font-bold text-xs ${
-                    selectedCategory === 'all' ? 'bg-[#667c67] text-white' : 'bg-gray-100 text-gray-700'
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm ${
+                    selectedCategory === 'all' 
+                      ? 'bg-[#667c67] text-white shadow-md scale-105' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  All ({filteredItems.length})
+                  {i18n.language === 'ar' ? 'الكل' : 'All'} ({filteredItems.length})
                 </button>
                 {availableCategories.map(cat => {
                   const count = filteredItems.filter(item => item.category === cat.id).length;
+                  const getCategoryIcon = (id: string) => {
+                    switch(id) {
+                      case 'appetizers': return <UtensilsCrossed size={14} />;
+                      case 'mains': return <Flame size={14} />;
+                      case 'desserts': return <Cake size={14} />;
+                      case 'drinks': return <Coffee size={14} />;
+                      default: return null;
+                    }
+                  };
+                  const categoryName = i18n.language === 'ar' && cat.name_ar ? cat.name_ar : cat.name;
                   return (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded-full font-bold text-xs ${
-                        selectedCategory === cat.id ? 'bg-[#667c67] text-white' : 'bg-gray-100 text-gray-700'
+                      className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 ${
+                        selectedCategory === cat.id 
+                          ? 'bg-[#667c67] text-white shadow-md scale-105' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {cat.name} ({count})
+                      {getCategoryIcon(cat.id)}
+                      {categoryName} ({count})
                     </button>
                   );
                 })}
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex justify-end items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500 font-semibold">
+                  {i18n.language === 'ar' ? 'العرض:' : 'View:'}
+                </span>
+                <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-1.5 rounded transition-all ${
+                      viewMode === 'grid' 
+                        ? 'bg-white text-[#667c67] shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('compact')}
+                    className={`p-1.5 rounded transition-all ${
+                      viewMode === 'compact' 
+                        ? 'bg-white text-[#667c67] shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    title="Compact Grid"
+                  >
+                    <Grid2x2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-1.5 rounded transition-all ${
+                      viewMode === 'list' 
+                        ? 'bg-white text-[#667c67] shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    title="List View"
+                  >
+                    <List size={16} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1111,8 +1183,121 @@ export function WaiterOrderTaking() {
               {i18n.language === 'ar' ? 'حاول تعديل الفلاتر' : 'Try adjusting your filters'}
             </p>
           </div>
+        ) : viewMode === 'list' ? (
+          /* List View */
+          <div className="space-y-3">
+            {filteredItems.map((item, index) => {
+              const isAdded = addedItems.has(item.id);
+              const inCart = cart.find(ci => ci.menu_item_id === item.id);
+              
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                  className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all border border-gray-100"
+                >
+                  <div className="flex gap-3 p-3">
+                    {/* Image */}
+                    <div 
+                      className="relative w-24 h-24 rounded-xl bg-gray-100 cursor-pointer group flex-shrink-0 overflow-hidden"
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setShowItemDetail(true);
+                      }}
+                    >
+                      {item.image_url ? (
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <UtensilsCrossed size={32} className="text-gray-300" />
+                        </div>
+                      )}
+                      {/* Badge */}
+                      {item.badges && item.badges.length > 0 && (
+                        <div className="absolute top-1 left-1">
+                          {(() => {
+                            const badge = item.badges[0];
+                            const badgeColors = {
+                              'Popular': 'bg-orange-500',
+                              'New': 'bg-green-500',
+                              'Chef Special': 'bg-purple-500',
+                              'Recommended': 'bg-blue-500'
+                            };
+                            return (
+                              <span className={`px-1.5 py-0.5 ${badgeColors[badge as keyof typeof badgeColors] || 'bg-gray-500'} text-white backdrop-blur-sm rounded-full text-[10px] font-bold`}>
+                                {badge}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
+                        {i18n.language === 'ar' ? item.name_ar : item.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+                        {i18n.language === 'ar' ? item.description_ar : item.description}
+                      </p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg font-black text-[#667c67]">${item.price.toFixed(2)}</span>
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock size={12} />
+                          {item.preparation_time}m
+                        </span>
+                        {item.dietary_tags && item.dietary_tags.length > 0 && (
+                          <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
+                            {item.dietary_tags[0]}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Add/Quantity Controls */}
+                      {!inCart ? (
+                        <button
+                          onClick={() => addToCart(item)}
+                          className={`px-4 py-1.5 rounded-lg font-bold text-sm transition-all flex items-center gap-1 ${
+                            isAdded 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-[#667c67] text-white hover:bg-[#556856]'
+                          }`}
+                        >
+                          {isAdded ? <Check size={16} /> : <Plus size={16} />}
+                          {isAdded ? 'Added' : 'Add'}
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(inCart.id, -1)}
+                            className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span className="font-bold min-w-[24px] text-center">{inCart.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(inCart.id, 1)}
+                            className="w-8 h-8 rounded-lg bg-[#667c67] text-white flex items-center justify-center hover:bg-[#556856]"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          /* Grid Views */
+          <div className={viewMode === 'compact' 
+            ? "grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-5" 
+            : "grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"
+          }>
             {filteredItems.map((item, index) => {
               const isAdded = addedItems.has(item.id);
               const inCart = cart.find(ci => ci.menu_item_id === item.id);
@@ -1127,26 +1312,33 @@ export function WaiterOrderTaking() {
                 >
                   {/* Image - Clickable */}
                   <div 
-                    className="relative aspect-square bg-gray-100 cursor-pointer group"
+                    className={`relative bg-gray-100 cursor-pointer group overflow-hidden ${
+                      viewMode === 'compact' ? 'aspect-square' : 'aspect-[4/3]'
+                    }`}
                     onClick={() => {
                       setSelectedItem(item);
                       setShowItemDetail(true);
                     }}
                   >
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img 
+                        src={item.image_url} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                        loading="lazy"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <UtensilsCrossed size={48} className="text-gray-300" />
+                        <UtensilsCrossed size={viewMode === 'compact' ? 32 : 48} className="text-gray-300" />
                       </div>
                     )}
                     
                     {/* View Details Overlay on Hover */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
+                      <div className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         <span className="text-xs font-bold text-gray-900 flex items-center gap-1">
                           <Info size={14} />
-                          View Details
+                          {i18n.language === 'ar' ? 'التفاصيل' : 'Details'}
                         </span>
                       </div>
                     </div>
@@ -1154,7 +1346,7 @@ export function WaiterOrderTaking() {
                     {/* Badges */}
                     {item.badges && item.badges.length > 0 && (
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        {item.badges.slice(0, 2).map(badge => {
+                        {item.badges.slice(0, viewMode === 'compact' ? 1 : 2).map(badge => {
                           const badgeColors = {
                             'Popular': 'bg-orange-500',
                             'New': 'bg-green-500',
@@ -1164,13 +1356,13 @@ export function WaiterOrderTaking() {
                           return (
                             <span 
                               key={badge} 
-                              className={`px-2 py-0.5 ${badgeColors[badge as keyof typeof badgeColors] || 'bg-gray-500'} text-white backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1`}
+                              className={`px-2 py-0.5 ${badgeColors[badge as keyof typeof badgeColors] || 'bg-gray-500'} text-white backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1 shadow-lg`}
                             >
                               {badge === 'Popular' && <Flame size={10} />}
                               {badge === 'New' && <Sparkles size={10} />}
                               {badge === 'Chef Special' && <Award size={10} />}
                               {badge === 'Recommended' && <Star size={10} />}
-                              {badge}
+                              {viewMode !== 'compact' && badge}
                             </span>
                           );
                         })}
@@ -1178,10 +1370,10 @@ export function WaiterOrderTaking() {
                     )}
                     
                     {/* Dietary Tags */}
-                    {item.dietary_tags && item.dietary_tags.length > 0 && (
+                    {item.dietary_tags && item.dietary_tags.length > 0 && viewMode !== 'compact' && (
                       <div className="absolute top-2 right-2 flex flex-col gap-1">
                         {item.dietary_tags.slice(0, 1).map(tag => (
-                          <span key={tag} className="px-2 py-0.5 bg-green-500 text-white backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
+                          <span key={tag} className="px-2 py-0.5 bg-green-500 text-white backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
                             <Leaf size={10} />
                             {tag}
                           </span>
@@ -1196,48 +1388,60 @@ export function WaiterOrderTaking() {
                           e.stopPropagation();
                           addToCart(item);
                         }}
-                        className={`absolute bottom-2 right-2 w-10 h-10 rounded-full shadow-lg flex items-center justify-center transition-all z-10 ${
-                          isAdded ? 'bg-green-500 text-white' : 'bg-white text-[#667c67] hover:bg-[#667c67] hover:text-white'
+                        className={`absolute bottom-2 right-2 ${viewMode === 'compact' ? 'w-8 h-8' : 'w-10 h-10'} rounded-full shadow-lg flex items-center justify-center transition-all z-10 ${
+                          isAdded ? 'bg-green-500 text-white scale-110' : 'bg-white text-[#667c67] hover:bg-[#667c67] hover:text-white'
                         }`}
                       >
-                        {isAdded ? <Check size={20} /> : <Plus size={20} />}
+                        {isAdded ? <Check size={viewMode === 'compact' ? 16 : 20} /> : <Plus size={viewMode === 'compact' ? 16 : 20} />}
                       </button>
                     )}
                     
                     {/* Preparation Time */}
-                    <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
-                      <span className="text-xs font-bold text-white flex items-center gap-1">
-                        <Clock size={10} />
-                        {item.preparation_time}m
-                      </span>
-                    </div>
+                    {viewMode !== 'compact' && (
+                      <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg">
+                        <span className="text-xs font-bold text-white flex items-center gap-1">
+                          <Clock size={10} />
+                          {item.preparation_time}m
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
-                  <div className="p-3">
-                    <h3 className="font-bold text-gray-900 text-sm mb-1 line-clamp-1">
+                  <div className={viewMode === 'compact' ? 'p-2' : 'p-3'}>
+                    <h3 className={`font-bold text-gray-900 mb-1 line-clamp-1 ${viewMode === 'compact' ? 'text-xs' : 'text-sm'}`}>
                       {i18n.language === 'ar' ? item.name_ar : item.name}
                     </h3>
-                    <p className="text-xs text-gray-500 mb-2 line-clamp-2">
-                      {i18n.language === 'ar' ? item.description_ar : item.description}
-                    </p>
+                    {viewMode !== 'compact' && (
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+                        {i18n.language === 'ar' ? item.description_ar : item.description}
+                      </p>
+                    )}
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-black text-[#667c67]">${item.price.toFixed(2)}</span>
+                      <span className={`font-black text-[#667c67] ${viewMode === 'compact' ? 'text-sm' : 'text-lg'}`}>
+                        ${item.price.toFixed(2)}
+                      </span>
                       {inCart && (
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => updateQuantity(inCart.id, -1)}
-                            className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                            className={`rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 ${
+                              viewMode === 'compact' ? 'w-6 h-6' : 'w-7 h-7'
+                            }`}
                           >
-                            <Minus size={14} />
+                            <Minus size={viewMode === 'compact' ? 12 : 14} />
                           </button>
-                          <span className="font-bold text-sm min-w-[20px] text-center">{inCart.quantity}</span>
+                          <span className={`font-bold text-center ${viewMode === 'compact' ? 'text-xs min-w-[16px]' : 'text-sm min-w-[20px]'}`}>
+                            {inCart.quantity}
+                          </span>
                           <button
                             onClick={() => updateQuantity(inCart.id, 1)}
-                            className="w-7 h-7 rounded-lg bg-[#667c67] text-white flex items-center justify-center hover:bg-[#556856]"
+                            className={`rounded-lg bg-[#667c67] text-white flex items-center justify-center hover:bg-[#556856] ${
+                              viewMode === 'compact' ? 'w-6 h-6' : 'w-7 h-7'
+                            }`}
                           >
-                            <Plus size={14} />
+                            <Plus size={viewMode === 'compact' ? 12 : 14} />
                           </button>
                         </div>
                       )}
@@ -1317,15 +1521,15 @@ export function WaiterOrderTaking() {
                   </div>
                 ) : (
                   cart.map(item => (
-                    <div key={item.id} className="bg-gray-50 rounded-xl p-4 mb-3">
+                    <div key={item.id} className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm">
                       <div className="flex gap-3 mb-3">
                         {item.image_url && (
-                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border-2 border-gray-200">
                             <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-gray-900 mb-1 truncate">
+                          <h4 className="font-bold text-gray-900 mb-1 truncate text-base">
                             {i18n.language === 'ar' ? item.name_ar : item.name}
                           </h4>
                           {item.modifiers && item.modifiers.length > 0 && (
@@ -1541,12 +1745,20 @@ export function WaiterOrderTaking() {
               className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header Image */}
-              <div className="relative h-64 bg-gray-100">
+              {/* Header Image with Gradient Overlay */}
+              <div className="relative h-80 bg-gray-100 overflow-hidden">
                 {selectedItem.image_url ? (
-                  <img src={selectedItem.image_url} alt={selectedItem.name} className="w-full h-full object-cover" />
+                  <>
+                    <img 
+                      src={selectedItem.image_url} 
+                      alt={selectedItem.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                    {/* Gradient Overlay for Better Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                  </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                     <UtensilsCrossed size={80} className="text-gray-300" />
                   </div>
                 )}
@@ -1555,25 +1767,25 @@ export function WaiterOrderTaking() {
                     setShowItemDetail(false);
                     setSelectedModifiers([]); // Reset modifiers
                   }}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                  className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center shadow-xl hover:bg-white transition-all z-10"
                 >
-                  <X size={20} />
+                  <X size={22} className="text-gray-700" />
                 </button>
                 
                 {/* Badges on Image */}
                 {selectedItem.badges && selectedItem.badges.length > 0 && (
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
                     {selectedItem.badges.map(badge => {
                       const badgeColors = {
-                        'Popular': 'bg-orange-500',
-                        'New': 'bg-green-500',
-                        'Chef Special': 'bg-purple-500',
-                        'Recommended': 'bg-blue-500'
+                        'Popular': 'bg-gradient-to-r from-orange-500 to-orange-600',
+                        'New': 'bg-gradient-to-r from-green-500 to-green-600',
+                        'Chef Special': 'bg-gradient-to-r from-purple-500 to-purple-600',
+                        'Recommended': 'bg-gradient-to-r from-blue-500 to-blue-600'
                       };
                       return (
                         <span 
                           key={badge} 
-                          className={`px-3 py-1 ${badgeColors[badge as keyof typeof badgeColors] || 'bg-gray-500'} text-white backdrop-blur-sm rounded-full text-sm font-bold flex items-center gap-1`}
+                          className={`px-3 py-1.5 ${badgeColors[badge as keyof typeof badgeColors] || 'bg-gray-500'} text-white backdrop-blur-sm rounded-full text-sm font-bold flex items-center gap-1.5 shadow-lg`}
                         >
                           {badge === 'Popular' && <Flame size={14} />}
                           {badge === 'New' && <Sparkles size={14} />}
@@ -1585,37 +1797,47 @@ export function WaiterOrderTaking() {
                     })}
                   </div>
                 )}
+
+                {/* Price Tag on Image (Bottom) */}
+                <div className="absolute bottom-4 left-4 z-10">
+                  <div className="bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl">
+                    <span className="text-3xl font-black text-[#667c67]">
+                      ${selectedItem.price.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Preparation Time Badge */}
+                <div className="absolute bottom-4 right-4 z-10">
+                  <div className="bg-black/70 backdrop-blur-md px-3 py-2 rounded-xl flex items-center gap-2 shadow-lg">
+                    <Clock size={16} className="text-white" />
+                    <span className="text-sm font-bold text-white">{selectedItem.preparation_time} min</span>
+                  </div>
+                </div>
               </div>
 
               {/* Content */}
               <div className="px-6 py-6">
-                {/* Title and Price */}
-                <div className="mb-4">
-                  <h2 className="text-2xl font-black text-gray-900 mb-2">
+                {/* Title and Description */}
+                <div className="mb-6">
+                  <h2 className="text-3xl font-black text-gray-900 mb-3 leading-tight">
                     {i18n.language === 'ar' ? selectedItem.name_ar : selectedItem.name}
                   </h2>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-600 text-base leading-relaxed">
                     {i18n.language === 'ar' ? selectedItem.description_ar : selectedItem.description}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-black text-[#667c67]">${selectedItem.price.toFixed(2)}</span>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Clock size={16} />
-                      <span className="font-semibold">{selectedItem.preparation_time} min</span>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Dietary Tags */}
                 {selectedItem.dietary_tags && selectedItem.dietary_tags.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-bold text-gray-900 mb-2">
+                  <div className="mb-6">
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">
                       {i18n.language === 'ar' ? 'معلومات غذائية' : 'Dietary Information'}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedItem.dietary_tags.map(tag => (
-                        <span key={tag} className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-semibold flex items-center gap-1">
-                          <Leaf size={14} />
+                        <span key={tag} className="px-4 py-2 bg-gradient-to-r from-green-50 to-green-100 text-green-700 rounded-xl text-sm font-bold flex items-center gap-2 border border-green-200">
+                          <Leaf size={16} />
                           {tag}
                         </span>
                       ))}
@@ -1623,28 +1845,36 @@ export function WaiterOrderTaking() {
                   </div>
                 )}
 
-                {/* Quick Info Grid */}
+                {/* Quick Info Grid - Enhanced */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
-                  <div className="bg-gray-50 rounded-xl p-3 text-center">
-                    <Clock size={20} className="text-[#667c67] mx-auto mb-1" />
-                    <div className="text-xs text-gray-600 font-semibold">
+                  <div className="bg-gradient-to-br from-[#667c67]/5 to-[#667c67]/10 rounded-2xl p-4 text-center border border-[#667c67]/20">
+                    <div className="w-10 h-10 rounded-full bg-[#667c67]/10 flex items-center justify-center mx-auto mb-2">
+                      <Clock size={20} className="text-[#667c67]" />
+                    </div>
+                    <div className="text-xs text-gray-600 font-semibold mb-1">
                       {i18n.language === 'ar' ? 'وقت التحضير' : 'Prep Time'}
                     </div>
-                    <div className="text-sm font-bold text-gray-900">{selectedItem.preparation_time}m</div>
+                    <div className="text-base font-black text-gray-900">{selectedItem.preparation_time}m</div>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-3 text-center">
-                    <DollarSign size={20} className="text-[#667c67] mx-auto mb-1" />
-                    <div className="text-xs text-gray-600 font-semibold">
+                  <div className="bg-gradient-to-br from-[#667c67]/5 to-[#667c67]/10 rounded-2xl p-4 text-center border border-[#667c67]/20">
+                    <div className="w-10 h-10 rounded-full bg-[#667c67]/10 flex items-center justify-center mx-auto mb-2">
+                      <DollarSign size={20} className="text-[#667c67]" />
+                    </div>
+                    <div className="text-xs text-gray-600 font-semibold mb-1">
                       {i18n.language === 'ar' ? 'السعر' : 'Price'}
                     </div>
-                    <div className="text-sm font-bold text-gray-900">${selectedItem.price}</div>
+                    <div className="text-base font-black text-gray-900">${selectedItem.price}</div>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-3 text-center">
-                    <UtensilsCrossed size={20} className="text-[#667c67] mx-auto mb-1" />
-                    <div className="text-xs text-gray-600 font-semibold">
+                  <div className="bg-gradient-to-br from-[#667c67]/5 to-[#667c67]/10 rounded-2xl p-4 text-center border border-[#667c67]/20">
+                    <div className="w-10 h-10 rounded-full bg-[#667c67]/10 flex items-center justify-center mx-auto mb-2">
+                      <UtensilsCrossed size={20} className="text-[#667c67]" />
+                    </div>
+                    <div className="text-xs text-gray-600 font-semibold mb-1">
                       {i18n.language === 'ar' ? 'الفئة' : 'Category'}
                     </div>
-                    <div className="text-sm font-bold text-gray-900 capitalize">{selectedItem.category}</div>
+                    <div className="text-base font-black text-gray-900 capitalize">
+                      {categories.find(c => c.id === selectedItem.category)?.[i18n.language === 'ar' ? 'name_ar' : 'name'] || selectedItem.category}
+                    </div>
                   </div>
                 </div>
 
