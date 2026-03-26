@@ -104,6 +104,7 @@ import { AdminWaiters } from './pages/admin/AdminWaiters';
 import { DepartmentDashboard } from './pages/DepartmentDashboard';
 import { WaiterDashboard } from './pages/WaiterDashboard';
 import { WaiterOrderTaking } from './pages/WaiterOrderTaking';
+import { WaiterOrderDetails } from './pages/WaiterOrderDetails';
 import { WaiterScanTable } from './pages/WaiterScanTable';
 import { RateWaiterPage } from './pages/RateWaiterPage';
 import { KitchenDisplayPage } from './pages/KitchenDisplayPage';
@@ -213,20 +214,12 @@ export const router = createBrowserRouter([
         Component: WaiterDashboard,
       },
       {
+        path: 'waiter/order-details/:id',
+        Component: WaiterOrderDetails,
+      },
+      {
         path: 'waiter/new-order',
         Component: WaiterOrderTaking,
-      },
-      {
-        path: 'waiter/new-order/:tableId',
-        Component: WaiterOrderTaking,
-      },
-      {
-        path: 'waiter/scan-table',
-        Component: WaiterScanTable,
-      },
-      {
-        path: 'waiter/rate',
-        Component: RateWaiterPage,
       },
       
       // Customer Routes (wrapped in MobileLayout)

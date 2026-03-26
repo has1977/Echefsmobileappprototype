@@ -135,10 +135,18 @@ export function WaiterOrderTaking() {
     const saved = localStorage.getItem('echefs_menu_items');
     if (saved) {
       const items = JSON.parse(saved);
-      setMenuItems(items);
-    } else {
-      // Default example items (same as before)
-      const exampleItems: MenuItem[] = [
+      // Check if we have enough items, if not reload defaults
+      if (items.length < 10) {
+        console.log('⚠️ Not enough menu items in localStorage, loading defaults...');
+        // Fall through to load defaults
+      } else {
+        setMenuItems(items);
+        return;
+      }
+    } 
+    
+    // Load default items
+    const exampleItems: MenuItem[] = [
         {
           id: '1',
           name: 'Ribeye Steak',
@@ -613,9 +621,10 @@ export function WaiterOrderTaking() {
           dietary_tags: ['Vegetarian'],
           stock_status: 'in_stock',
         },
-      ];
-      setMenuItems(exampleItems);
-    }
+    ];
+    setMenuItems(exampleItems);
+    // Save to localStorage so it's available across pages
+    localStorage.setItem('echefs_menu_items', JSON.stringify(exampleItems));
   };
 
   const loadCategories = () => {
@@ -623,12 +632,15 @@ export function WaiterOrderTaking() {
     if (saved) {
       setCategories(JSON.parse(saved));
     } else {
-      setCategories([
+      const defaultCategories = [
         { id: 'appetizers', name: 'Appetizers', name_ar: 'المقبلات', icon: 'utensils' },
         { id: 'mains', name: 'Main Dishes', name_ar: 'الأطباق الرئيسية', icon: 'chef-hat' },
         { id: 'desserts', name: 'Desserts', name_ar: 'الحلويات', icon: 'ice-cream' },
         { id: 'drinks', name: 'Drinks', name_ar: 'المشروبات', icon: 'coffee' },
-      ]);
+      ];
+      setCategories(defaultCategories);
+      // Save to localStorage
+      localStorage.setItem('echefs_categories', JSON.stringify(defaultCategories));
     }
   };
 
@@ -1289,68 +1301,84 @@ export function WaiterOrderTaking() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-6 py-4">
-                {cart.map(item => (
-                  <div key={item.id} className="bg-gray-50 rounded-xl p-4 mb-3">
-                    <div className="flex gap-3 mb-3">
-                      {item.image_url && (
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-gray-900 mb-1 truncate">
-                          {i18n.language === 'ar' ? item.name_ar : item.name}
-                        </h4>
-                        {item.modifiers && item.modifiers.length > 0 && (
-                          <div className="text-xs text-gray-600 mb-1 space-y-0.5">
-                            {item.modifiers.map((mod, idx) => (
-                              <div key={idx} className="flex items-center gap-1">
-                                <span className={mod.type === 'add' ? 'text-green-600' : 'text-red-600'}>
-                                  {mod.type === 'add' ? '+' : '-'}
-                                </span>
-                                <span>
-                                  {i18n.language === 'ar' ? mod.name_ar : mod.name}
-                                  {mod.quantity && mod.quantity > 1 && ` x${mod.quantity}`}
-                                  {mod.type === 'add' && mod.price && ` (+$${(mod.price * (mod.quantity || 1)).toFixed(2)})`}
-                                </span>
-                              </div>
-                            ))}
+                {cart.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <ShoppingCart className="w-12 h-12 text-gray-400" />
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">
+                      {i18n.language === 'ar' ? 'السلة فارغة' : 'Cart is Empty'}
+                    </h4>
+                    <p className="text-sm text-gray-500 text-center max-w-xs">
+                      {i18n.language === 'ar' 
+                        ? 'ابدأ بإضافة عناصر من القائمة' 
+                        : 'Start adding items from the menu'}
+                    </p>
+                  </div>
+                ) : (
+                  cart.map(item => (
+                    <div key={item.id} className="bg-gray-50 rounded-xl p-4 mb-3">
+                      <div className="flex gap-3 mb-3">
+                        {item.image_url && (
+                          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                           </div>
                         )}
-                        <p className="text-sm text-gray-600 font-semibold">${item.price.toFixed(2)} each</p>
-                        <div className="flex items-center gap-3 mt-2">
-                          <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="w-8 h-8 rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center"
-                          >
-                            <Minus size={14} />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-gray-900 mb-1 truncate">
+                            {i18n.language === 'ar' ? item.name_ar : item.name}
+                          </h4>
+                          {item.modifiers && item.modifiers.length > 0 && (
+                            <div className="text-xs text-gray-600 mb-1 space-y-0.5">
+                              {item.modifiers.map((mod, idx) => (
+                                <div key={idx} className="flex items-center gap-1">
+                                  <span className={mod.type === 'add' ? 'text-green-600' : 'text-red-600'}>
+                                    {mod.type === 'add' ? '+' : '-'}
+                                  </span>
+                                  <span>
+                                    {i18n.language === 'ar' ? mod.name_ar : mod.name}
+                                    {mod.quantity && mod.quantity > 1 && ` x${mod.quantity}`}
+                                    {mod.type === 'add' && mod.price && ` (+$${(mod.price * (mod.quantity || 1)).toFixed(2)})`}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-sm text-gray-600 font-semibold">${item.price.toFixed(2)} each</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="w-8 h-8 rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center"
+                            >
+                              <Minus size={14} />
+                            </button>
+                            <span className="font-bold min-w-[24px] text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, 1)}
+                              className="w-8 h-8 rounded-lg bg-[#667c67] text-white flex items-center justify-center"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end justify-between">
+                          <button onClick={() => removeFromCart(item.id)} className="text-red-500">
+                            <Trash2 size={18} />
                           </button>
-                          <span className="font-bold min-w-[24px] text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="w-8 h-8 rounded-lg bg-[#667c67] text-white flex items-center justify-center"
-                          >
-                            <Plus size={14} />
-                          </button>
+                          <span className="font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end justify-between">
-                        <button onClick={() => removeFromCart(item.id)} className="text-red-500">
-                          <Trash2 size={18} />
-                        </button>
-                        <span className="font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
+                      <input
+                        type="text"
+                        placeholder={i18n.language === 'ar' ? 'ملاحظات خاصة...' : 'Special instructions...'}
+                        value={item.special_instructions || ''}
+                        onChange={(e) => addSpecialInstructions(item.id, e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm"
+                        dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+                      />
                     </div>
-                    <input
-                      type="text"
-                      placeholder={i18n.language === 'ar' ? 'ملاحظات خاصة...' : 'Special instructions...'}
-                      value={item.special_instructions || ''}
-                      onChange={(e) => addSpecialInstructions(item.id, e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm"
-                      dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
-                    />
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
@@ -1362,7 +1390,12 @@ export function WaiterOrderTaking() {
                 </div>
                 <button
                   onClick={submitOrder}
-                  className="w-full px-6 py-4 rounded-xl bg-[#667c67] text-white font-bold text-lg hover:bg-[#556856] transition-colors flex items-center justify-center gap-2 shadow-lg"
+                  disabled={cart.length === 0}
+                  className={`w-full px-6 py-4 rounded-xl text-white font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg ${
+                    cart.length === 0 
+                      ? 'bg-gray-300 cursor-not-allowed' 
+                      : 'bg-[#667c67] hover:bg-[#556856]'
+                  }`}
                 >
                   <Send size={20} />
                   {i18n.language === 'ar' ? 'إرسال الطلب' : 'Submit Order'}

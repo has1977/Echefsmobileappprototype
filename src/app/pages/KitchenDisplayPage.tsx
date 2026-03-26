@@ -287,6 +287,77 @@ export function KitchenDisplayPage() {
     }
   };
 
+  // Cancel entire order
+  const cancelOrder = (orderId: string, reason?: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (confirm(`Are you sure you want to cancel Order ${order.orderNumber}?${reason ? `\nReason: ${reason}` : ''}`)) {
+      // Remove from active orders
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      
+      // Update localStorage
+      const waiterOrders = JSON.parse(localStorage.getItem('echefs_waiter_orders') || '[]');
+      const updatedOrders = waiterOrders.map((wo: any) =>
+        wo.id === orderId ? { ...wo, status: 'cancelled', cancelled_at: new Date(), cancel_reason: reason } : wo
+      );
+      localStorage.setItem('echefs_waiter_orders', JSON.stringify(updatedOrders));
+      
+      playSound('alert');
+      toast.error(`Order ${order.orderNumber} cancelled`);
+    }
+  };
+
+  // Cancel specific item from order
+  const cancelItem = (orderId: string, itemId: string, reason?: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    const item = order.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (confirm(`Cancel "${item.name}" from Order ${order.orderNumber}?${reason ? `\nReason: ${reason}` : ''}`)) {
+      setOrders(prevOrders =>
+        prevOrders.map(o => {
+          if (o.id === orderId) {
+            const updatedItems = o.items.filter(i => i.id !== itemId);
+            
+            // If no items left, remove the entire order
+            if (updatedItems.length === 0) {
+              setTimeout(() => {
+                setOrders(prev => prev.filter(order => order.id !== orderId));
+                toast.error(`Order ${order.orderNumber} removed (all items cancelled)`);
+              }, 500);
+            }
+            
+            return {
+              ...o,
+              items: updatedItems,
+            };
+          }
+          return o;
+        })
+      );
+
+      // Update localStorage
+      const waiterOrders = JSON.parse(localStorage.getItem('echefs_waiter_orders') || '[]');
+      const updatedOrders = waiterOrders.map((wo: any) => {
+        if (wo.id === orderId) {
+          const updatedItems = wo.items.filter((i: any) => i.id !== itemId);
+          return {
+            ...wo,
+            items: updatedItems,
+            cancelled_items: [...(wo.cancelled_items || []), { item_id: itemId, reason, cancelled_at: new Date() }],
+          };
+        }
+        return wo;
+      });
+      localStorage.setItem('echefs_waiter_orders', JSON.stringify(updatedOrders));
+
+      toast.success(`Item "${item.name}" cancelled from Order ${order.orderNumber}`);
+    }
+  };
+
   // Filter and sort orders
   const filteredOrders = useMemo(() => {
     const activeOrders = viewMode === 'active' ? orders : completedOrders;
@@ -592,36 +663,46 @@ export function KitchenDisplayPage() {
                       {order.items.map((item) => {
                         const StationIcon = getStationIcon(item.station);
                         return (
-                          <div key={item.id} className="flex items-start gap-3">
-                            {item.imageUrl ? (
-                              <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200">
-                                <img 
-                                  src={item.imageUrl} 
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    // Fallback to icon if image fails
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement!.innerHTML = `<div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center"><svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`;
-                                  }}
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                <StationIcon size={24} className="text-gray-600" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xl font-bold text-gray-900">×{item.quantity}</span>
-                                <span className="font-bold text-gray-700">{item.name}</span>
-                              </div>
-                              {item.specialInstructions && (
-                                <p className="text-sm text-red-600 font-semibold mt-1 flex items-center gap-1">
-                                  <AlertCircle size={14} />
-                                  {item.specialInstructions}
-                                </p>
+                          <div key={item.id} className="group relative">
+                            <div className="flex items-start gap-3">
+                              {item.imageUrl ? (
+                                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      // Fallback to icon if image fails
+                                      e.currentTarget.style.display = 'none';
+                                      e.currentTarget.parentElement!.innerHTML = `<div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center"><svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>`;
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                  <StationIcon size={24} className="text-gray-600" />
+                                </div>
                               )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xl font-bold text-gray-900">×{item.quantity}</span>
+                                  <span className="font-bold text-gray-700">{item.name}</span>
+                                </div>
+                                {item.specialInstructions && (
+                                  <p className="text-sm text-red-600 font-semibold mt-1 flex items-center gap-1">
+                                    <AlertCircle size={14} />
+                                    {item.specialInstructions}
+                                  </p>
+                                )}
+                              </div>
+                              {/* Cancel Item Button - Shows on hover */}
+                              <button
+                                onClick={() => cancelItem(order.id, item.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center flex-shrink-0"
+                                title="Cancel this item"
+                              >
+                                <X size={16} />
+                              </button>
                             </div>
                           </div>
                         );
@@ -657,6 +738,13 @@ export function KitchenDisplayPage() {
                           Served
                         </button>
                       )}
+                      <button
+                        onClick={() => cancelOrder(order.id)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors"
+                      >
+                        <Trash2 size={18} />
+                        Cancel Order
+                      </button>
                     </div>
                   </motion.div>
                 );

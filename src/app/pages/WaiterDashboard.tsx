@@ -8,8 +8,9 @@ import {
   Table2, Users, Star, Bell, Coffee, Flame, Target,
   BarChart3, Award, Zap, Timer, ShoppingCart, Grid3x3,
   List, Search, Filter, Calendar, MessageSquare, Heart,
-  Settings
+  Settings, Edit3, X, Check, Home, Palmtree, Crown
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface WaiterOrder {
   id: string;
@@ -23,6 +24,14 @@ interface WaiterOrder {
   customer_name?: string;
 }
 
+interface TableRegion {
+  id: string;
+  name: string;
+  icon: any;
+  tables: number[];
+  color: string;
+}
+
 export function WaiterDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -32,6 +41,17 @@ export function WaiterDashboard() {
   const [completedOrders, setCompletedOrders] = useState<WaiterOrder[]>([]);
   const [viewMode, setViewMode] = useState<'active' | 'completed'>('active');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingTableOrder, setEditingTableOrder] = useState<WaiterOrder | null>(null);
+  const [newTableNumber, setNewTableNumber] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
+
+  // Table regions - same as WaiterOrderTaking
+  const tableRegions: TableRegion[] = [
+    { id: 'indoor', name: 'Indoor Dining', icon: Home, tables: Array.from({length: 20}, (_, i) => i + 1), color: '#667c67' },
+    { id: 'outdoor', name: 'Outdoor Terrace', icon: Palmtree, tables: Array.from({length: 15}, (_, i) => i + 21), color: '#8b9c7d' },
+    { id: 'vip', name: 'VIP Section', icon: Crown, tables: Array.from({length: 8}, (_, i) => i + 36), color: '#d4af37' },
+    { id: 'bar', name: 'Bar Area', icon: Coffee, tables: Array.from({length: 10}, (_, i) => i + 44), color: '#a67c52' },
+  ];
 
   useEffect(() => {
     // Load waiter info
@@ -149,6 +169,36 @@ export function WaiterDashboard() {
     order.table_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     order.order_number.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleChangeTable = () => {
+    if (!editingTableOrder || !newTableNumber.trim()) {
+      toast.error('Please enter a valid table number');
+      return;
+    }
+
+    // Update the order
+    setActiveOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === editingTableOrder.id
+          ? { ...order, table_number: newTableNumber }
+          : order
+      )
+    );
+
+    // Update localStorage if waiter orders exist
+    const waiterOrders = JSON.parse(localStorage.getItem('echefs_waiter_orders') || '[]');
+    const updatedWaiterOrders = waiterOrders.map((order: any) =>
+      order.id === editingTableOrder.id
+        ? { ...order, table_number: newTableNumber }
+        : order
+    );
+    localStorage.setItem('echefs_waiter_orders', JSON.stringify(updatedWaiterOrders));
+
+    toast.success(`Order ${editingTableOrder.order_number} moved to ${newTableNumber}`);
+    setEditingTableOrder(null);
+    setNewTableNumber('');
+    setSelectedRegion('');
+  };
 
   if (!waiterInfo) {
     return (
@@ -329,7 +379,7 @@ export function WaiterDashboard() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => navigate(`/waiter/order/${order.id}`)}
+                      onClick={() => navigate(`/waiter/order-details/${order.id}`)}
                       className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer border-2 border-transparent hover:border-[#667c67]"
                     >
                       {/* Header */}
@@ -393,7 +443,20 @@ export function WaiterDashboard() {
 
                       {/* Actions */}
                       {viewMode === 'active' && (
-                        <div className="px-4 pb-4">
+                        <div className="px-4 pb-4 space-y-2">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTableOrder(order);
+                                setNewTableNumber(order.table_number);
+                              }}
+                              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                              Change Table
+                            </button>
+                          </div>
                           {order.status === 'ready' && (
                             <button
                               onClick={(e) => {
@@ -463,6 +526,165 @@ export function WaiterDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Change Table Modal */}
+      <AnimatePresence>
+        {editingTableOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setEditingTableOrder(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-[#1F2933]">
+                  Change Table Number
+                </h3>
+                <button
+                  onClick={() => setEditingTableOrder(null)}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500 text-white flex items-center justify-center">
+                    <Table2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-600 font-semibold">Order {editingTableOrder.order_number}</p>
+                    <p className="text-xs text-blue-500">Current: {editingTableOrder.table_number}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 1: Select Region */}
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-900 mb-3">
+                  Step 1: Select Area
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {tableRegions.map((region) => {
+                    const RegionIcon = region.icon;
+                    const isSelected = selectedRegion === region.id;
+                    return (
+                      <button
+                        key={region.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRegion(region.id);
+                          setNewTableNumber(''); // Reset table selection when region changes
+                        }}
+                        className={`p-3 rounded-xl border-2 transition-all flex items-center gap-2 ${
+                          isSelected
+                            ? 'border-[#667c67] bg-[#667c67]/10 shadow-md'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
+                      >
+                        <RegionIcon
+                          size={20}
+                          style={{ color: region.color }}
+                          className={isSelected ? 'text-[#667c67]' : ''}
+                        />
+                        <span className={`text-sm font-semibold ${isSelected ? 'text-[#667c67]' : 'text-gray-700'}`}>
+                          {region.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Step 2: Select Table Number */}
+              {selectedRegion && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4"
+                >
+                  <label className="block text-sm font-bold text-gray-900 mb-3">
+                    Step 2: Select Table Number
+                  </label>
+                  <div className="max-h-64 overflow-y-auto bg-gray-50 rounded-xl p-3 border border-gray-200">
+                    <div className="grid grid-cols-5 gap-2">
+                      {tableRegions
+                        .find(r => r.id === selectedRegion)
+                        ?.tables.map((tableNum) => {
+                          const tableStr = `T${tableNum}`;
+                          const isSelected = newTableNumber === tableStr;
+                          return (
+                            <button
+                              key={tableNum}
+                              type="button"
+                              onClick={() => setNewTableNumber(tableStr)}
+                              className={`p-3 rounded-lg border-2 font-bold transition-all ${
+                                isSelected
+                                  ? 'border-[#667c67] bg-[#667c67] text-white shadow-lg scale-105'
+                                  : 'border-gray-300 bg-white hover:border-[#667c67] hover:bg-[#667c67]/10 text-gray-700'
+                              }`}
+                            >
+                              {tableNum}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Selected Table Display */}
+              {newTableNumber && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-6 p-4 rounded-xl bg-green-50 border-2 border-green-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-green-500 text-white flex items-center justify-center">
+                      <Check className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-green-600 font-semibold">New Table Selected</p>
+                      <p className="text-lg font-bold text-green-700">{newTableNumber}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setEditingTableOrder(null)}
+                  className="flex-1 px-6 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleChangeTable}
+                  disabled={!newTableNumber.trim()}
+                  className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                    !newTableNumber.trim()
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-[#667c67] hover:bg-[#556856] text-white'
+                  }`}
+                >
+                  <Check className="w-4 h-4" />
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

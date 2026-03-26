@@ -163,7 +163,7 @@ export function AdminOrders() {
       });
       
       return {
-        id: `revenue-day-${i}-${date.getTime()}`, // Make ID truly unique with timestamp
+        id: `revenue-day-${i}`, // Simple unique ID
         date: format(date, 'MMM dd'),
         orders: dayOrders.length,
         revenue: dayOrders.reduce((sum, o) => sum + o.total, 0),
@@ -176,7 +176,7 @@ export function AdminOrders() {
   const statusData = useMemo(() => {
     const statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'completed', 'cancelled'];
     return statuses.map((status, index) => ({
-      id: `status-${status}-${index}-${Date.now()}`, // Make ID truly unique
+      id: `status-${status}`, // Simple unique ID without Date.now()
       name: status,
       value: filteredOrders.filter(o => o.status === status).length,
     })).filter(s => s.value > 0);
