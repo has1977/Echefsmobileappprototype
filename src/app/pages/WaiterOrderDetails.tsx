@@ -9,6 +9,8 @@ import {
   Sparkles, Star, Award, Leaf, Info, Coffee, Cake, Users
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import type { MenuType } from '../lib/types';
 
 interface OrderItem {
   id: string;
@@ -53,6 +55,7 @@ interface Order {
 export function WaiterOrderDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t, i18n } = useTranslation();
   const [order, setOrder] = useState<Order | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -62,15 +65,18 @@ export function WaiterOrderDetails() {
   
   // Add Item Modal States
   const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState<any>(null);
   const [itemQuantity, setItemQuantity] = useState(1);
   const [itemNotes, setItemNotes] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedMenuType, setSelectedMenuType] = useState<MenuType>('dine_in');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadOrderDetails();
     loadMenuItems();
+    loadCategories();
   }, [id]);
 
   const loadOrderDetails = () => {
@@ -136,6 +142,23 @@ export function WaiterOrderDetails() {
     setOrder(foundOrder);
   };
 
+  const loadCategories = () => {
+    const saved = localStorage.getItem('echefs_categories');
+    if (saved) {
+      setCategories(JSON.parse(saved));
+    } else {
+      // Default categories
+      const defaultCategories = [
+        { id: 'appetizers', name: 'Appetizers', name_ar: 'المقبلات', icon: 'utensils-crossed' },
+        { id: 'mains', name: 'Main Course', name_ar: 'الأطباق الرئيسية', icon: 'flame' },
+        { id: 'desserts', name: 'Desserts', name_ar: 'الحلويات', icon: 'cake' },
+        { id: 'drinks', name: 'Beverages', name_ar: 'المشروبات', icon: 'coffee' }
+      ];
+      setCategories(defaultCategories);
+      localStorage.setItem('echefs_categories', JSON.stringify(defaultCategories));
+    }
+  };
+
   const loadMenuItems = () => {
     // Load menu items from localStorage
     const saved = localStorage.getItem('echefs_menu_items');
@@ -151,7 +174,8 @@ export function WaiterOrderDetails() {
           name_ar: 'سلمون مشوي',
           price: 18.50,
           image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Fresh Atlantic salmon grilled to perfection',
           badges: ['Popular', 'Chef Special'],
           dietary_tags: ['Gluten Free'],
@@ -163,7 +187,8 @@ export function WaiterOrderDetails() {
           name_ar: 'برغر لحم',
           price: 12.50,
           image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Juicy beef patty with fresh vegetables',
           badges: ['Popular'],
           preparation_time: 15,
@@ -174,7 +199,8 @@ export function WaiterOrderDetails() {
           name_ar: 'بيتزا مارغريتا',
           price: 14.00,
           image_url: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Classic Italian pizza with fresh mozzarella',
           dietary_tags: ['Vegetarian'],
           preparation_time: 18,
@@ -185,7 +211,8 @@ export function WaiterOrderDetails() {
           name_ar: 'ستيك ريب آي',
           price: 28.99,
           image_url: 'https://images.unsplash.com/photo-1619719015339-133a130520f6?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Premium ribeye steak grilled to perfection',
           badges: ['Chef Special', 'Recommended'],
           dietary_tags: ['Gluten Free'],
@@ -197,7 +224,8 @@ export function WaiterOrderDetails() {
           name_ar: 'دجاج ألفريدو',
           price: 16.99,
           image_url: 'https://images.unsplash.com/photo-1645112411341-6c4fd023714a?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Creamy fettuccine with grilled chicken',
           badges: ['Popular'],
           preparation_time: 20,
@@ -208,7 +236,8 @@ export function WaiterOrderDetails() {
           name_ar: 'شرائح لحم الخروف',
           price: 24.50,
           image_url: 'https://images.unsplash.com/photo-1562158147-f8c57c1e085c?w=400&h=400&fit=crop',
-          category: 'Main Course',
+          category: 'mains',
+          menu_type: 'dine_in',
           description: 'Tender lamb chops with herbs',
           badges: ['Chef Special'],
           dietary_tags: ['Gluten Free'],
@@ -222,7 +251,8 @@ export function WaiterOrderDetails() {
           name_ar: 'سلطة سيزر',
           price: 8.50,
           image_url: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Classic Caesar with crispy croutons',
           dietary_tags: ['Vegetarian'],
           preparation_time: 8,
@@ -233,7 +263,8 @@ export function WaiterOrderDetails() {
           name_ar: 'سلطة يونانية',
           price: 11.50,
           image_url: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Fresh vegetables with feta cheese',
           dietary_tags: ['Vegetarian', 'Gluten Free'],
           preparation_time: 8,
@@ -244,7 +275,8 @@ export function WaiterOrderDetails() {
           name_ar: 'بطاطس مقلية',
           price: 4.50,
           image_url: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Crispy golden fries',
           badges: ['Popular'],
           dietary_tags: ['Vegetarian', 'Vegan'],
@@ -256,7 +288,8 @@ export function WaiterOrderDetails() {
           name_ar: 'خبز بالثوم',
           price: 5.99,
           image_url: 'https://images.unsplash.com/photo-1573140401552-3fab0b24306f?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Toasted bread with garlic butter',
           badges: ['Popular'],
           dietary_tags: ['Vegetarian'],
@@ -268,7 +301,8 @@ export function WaiterOrderDetails() {
           name_ar: 'حلقات البصل',
           price: 6.99,
           image_url: 'https://images.unsplash.com/photo-1639024471283-03518883512d?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Crispy battered onion rings',
           dietary_tags: ['Vegetarian'],
           preparation_time: 8,
@@ -279,7 +313,8 @@ export function WaiterOrderDetails() {
           name_ar: 'شوربة طماطم',
           price: 8.99,
           image_url: 'https://images.unsplash.com/photo-1692776407523-8f3c4678ad36?w=400&h=400&fit=crop',
-          category: 'Appetizer',
+          category: 'appetizers',
+          menu_type: 'dine_in',
           description: 'Creamy tomato soup with basil',
           dietary_tags: ['Vegetarian', 'Vegan'],
           preparation_time: 10,
@@ -292,7 +327,8 @@ export function WaiterOrderDetails() {
           name_ar: 'كيكة الشوكولاتة',
           price: 6.50,
           image_url: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=400&fit=crop',
-          category: 'Dessert',
+          category: 'desserts',
+          menu_type: 'dine_in',
           description: 'Rich chocolate layer cake',
           badges: ['Popular'],
           preparation_time: 5,
@@ -303,7 +339,8 @@ export function WaiterOrderDetails() {
           name_ar: 'تيراميسو',
           price: 7.50,
           image_url: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=400&fit=crop',
-          category: 'Dessert',
+          category: 'desserts',
+          menu_type: 'dine_in',
           description: 'Classic Italian dessert',
           badges: ['Chef Special'],
           preparation_time: 5,
@@ -314,7 +351,8 @@ export function WaiterOrderDetails() {
           name_ar: 'آيس كريم',
           price: 5.50,
           image_url: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=400&fit=crop',
-          category: 'Dessert',
+          category: 'desserts',
+          menu_type: 'dine_in',
           description: 'Assorted flavors available',
           dietary_tags: ['Vegetarian'],
           preparation_time: 3,
@@ -325,7 +363,8 @@ export function WaiterOrderDetails() {
           name_ar: 'تشيز كيك',
           price: 8.00,
           image_url: 'https://images.unsplash.com/photo-1533134486753-c833f0ed4866?w=400&h=400&fit=crop',
-          category: 'Dessert',
+          category: 'desserts',
+          menu_type: 'dine_in',
           description: 'New York style cheesecake',
           badges: ['Popular'],
           preparation_time: 5,
@@ -338,7 +377,8 @@ export function WaiterOrderDetails() {
           name_ar: 'شاي مثلج',
           price: 3.50,
           image_url: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&h=400&fit=crop',
-          category: 'Beverage',
+          category: 'drinks',
+          menu_type: 'dine_in',
           description: 'Refreshing iced tea with lemon',
           dietary_tags: ['Vegan'],
           preparation_time: 3,
@@ -349,7 +389,8 @@ export function WaiterOrderDetails() {
           name_ar: 'كابتشينو',
           price: 4.00,
           image_url: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=400&fit=crop',
-          category: 'Beverage',
+          category: 'drinks',
+          menu_type: 'dine_in',
           description: 'Italian style cappuccino',
           badges: ['Popular'],
           dietary_tags: ['Vegetarian'],
@@ -361,7 +402,8 @@ export function WaiterOrderDetails() {
           name_ar: 'عصير برتقال طازج',
           price: 5.50,
           image_url: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&h=400&fit=crop',
-          category: 'Beverage',
+          category: 'drinks',
+          menu_type: 'dine_in',
           description: 'Freshly squeezed orange juice',
           badges: ['New'],
           dietary_tags: ['Vegan', 'Gluten Free'],
@@ -373,7 +415,8 @@ export function WaiterOrderDetails() {
           name_ar: 'ميلك شيك',
           price: 5.99,
           image_url: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400&h=400&fit=crop',
-          category: 'Beverage',
+          category: 'drinks',
+          menu_type: 'dine_in',
           description: 'Thick creamy milkshake - vanilla, chocolate or strawberry',
           badges: ['Popular'],
           dietary_tags: ['Vegetarian'],
@@ -385,7 +428,8 @@ export function WaiterOrderDetails() {
           name_ar: 'ليمونادة',
           price: 3.99,
           image_url: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&h=400&fit=crop',
-          category: 'Beverage',
+          category: 'drinks',
+          menu_type: 'dine_in',
           description: 'Fresh homemade lemonade',
           dietary_tags: ['Vegan', 'Gluten Free'],
           preparation_time: 3,
@@ -652,15 +696,32 @@ export function WaiterOrderDetails() {
   };
 
   // Filter menu items
-  const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category).filter(Boolean)))];
+  const availableCategories = categories.filter(cat => {
+    const hasItems = menuItems.some(item => item.category === cat.id && item.menu_type === selectedMenuType);
+    return hasItems;
+  });
   
   const filteredMenuItems = menuItems.filter(item => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+    const matchesMenuType = item.menu_type === selectedMenuType;
+    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesSearch = searchQuery === '' || 
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.name_ar?.includes(searchQuery);
-    return matchesCategory && matchesSearch;
+    return matchesMenuType && matchesCategory && matchesSearch;
   });
+
+  // Debug logging for Add Item Modal
+  useEffect(() => {
+    if (showAddItemModal) {
+      console.log('📊 Add Item Modal Debug:');
+      console.log('Current language:', i18n.language);
+      console.log('Categories loaded:', categories.length, categories);
+      console.log('Menu items loaded:', menuItems.length);
+      console.log('Selected menu type:', selectedMenuType);
+      console.log('Available categories:', availableCategories.length, availableCategories);
+      console.log('Filtered items:', filteredMenuItems.length);
+    }
+  }, [showAddItemModal, categories, menuItems, selectedMenuType, availableCategories, filteredMenuItems, i18n.language]);
 
   const readyItemsCount = order?.items.filter(i => i.status === 'ready' || i.status === 'served').length || 0;
   const totalItemsCount = order?.items.length || 0;
@@ -1189,7 +1250,7 @@ export function WaiterOrderDetails() {
               setItemQuantity(1);
               setItemNotes('');
               setSearchQuery('');
-              setSelectedCategory('All');
+              setSelectedCategory('all');
             }}
           >
             <motion.div
@@ -1209,7 +1270,7 @@ export function WaiterOrderDetails() {
                     setItemQuantity(1);
                     setItemNotes('');
                     setSearchQuery('');
-                    setSelectedCategory('All');
+                    setSelectedCategory('all');
                   }}
                   className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all"
                 >
@@ -1252,7 +1313,7 @@ export function WaiterOrderDetails() {
                           <span className="text-3xl font-bold text-[#667c67]">${selectedMenuItem.price.toFixed(2)}</span>
                           {selectedMenuItem.category && (
                             <span className="px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-semibold">
-                              {selectedMenuItem.category}
+                              {categories.find(c => c.id === selectedMenuItem.category)?.[i18n.language === 'ar' ? 'name_ar' : 'name'] || selectedMenuItem.category}
                             </span>
                           )}
                         </div>
@@ -1341,26 +1402,79 @@ export function WaiterOrderDetails() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search menu items..."
+                        placeholder={i18n.language === 'ar' ? 'ابحث عن العناصر...' : 'Search menu items...'}
                         className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-0"
                       />
                     </div>
 
-                    {/* Category Filter */}
+                    {/* Menu Type Filter */}
                     <div className="flex gap-2 overflow-x-auto pb-2">
-                      {categories.map(cat => (
-                        <button
-                          key={cat}
-                          onClick={() => setSelectedCategory(cat)}
-                          className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all ${
-                            selectedCategory === cat
-                              ? 'bg-[#667c67] text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
+                      {(['dine_in', 'takeaway', 'delivery'] as MenuType[]).map(type => {
+                        const typeLabels = {
+                          dine_in: { en: 'Dine In', ar: 'داخل المطعم' },
+                          takeaway: { en: 'Takeaway', ar: 'طلبات خارجية' },
+                          delivery: { en: 'Delivery', ar: 'توصيل' }
+                        };
+                        const label = i18n.language === 'ar' ? typeLabels[type].ar : typeLabels[type].en;
+                        const count = menuItems.filter(item => item.menu_type === type).length;
+                        return (
+                          <button
+                            key={type}
+                            onClick={() => {
+                              setSelectedMenuType(type);
+                              setSelectedCategory('all');
+                            }}
+                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${
+                              selectedMenuType === type
+                                ? 'bg-[#667c67] text-white shadow-md scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {label} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Category Filter with Icons */}
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      <button
+                        onClick={() => setSelectedCategory('all')}
+                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${
+                          selectedCategory === 'all'
+                            ? 'bg-[#667c67] text-white shadow-md scale-105'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {i18n.language === 'ar' ? 'الكل' : 'All'} ({filteredMenuItems.length})
+                      </button>
+                      {availableCategories.map(cat => {
+                        const count = menuItems.filter(item => item.category === cat.id && item.menu_type === selectedMenuType).length;
+                        const getCategoryIcon = (id: string) => {
+                          switch(id) {
+                            case 'appetizers': return <UtensilsCrossed size={14} />;
+                            case 'mains': return <Flame size={14} />;
+                            case 'desserts': return <Cake size={14} />;
+                            case 'drinks': return <Coffee size={14} />;
+                            default: return null;
+                          }
+                        };
+                        const categoryName = i18n.language === 'ar' && cat.name_ar ? cat.name_ar : cat.name;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center gap-1.5 ${
+                              selectedCategory === cat.id
+                                ? 'bg-[#667c67] text-white shadow-md scale-105'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {getCategoryIcon(cat.id)}
+                            {categoryName} ({count})
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1399,7 +1513,7 @@ export function WaiterOrderDetails() {
                               <span className="text-xl font-bold text-[#667c67]">${item.price.toFixed(2)}</span>
                               {item.category && (
                                 <span className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-semibold">
-                                  {item.category}
+                                  {categories.find(c => c.id === item.category)?.[i18n.language === 'ar' ? 'name_ar' : 'name'] || item.category}
                                 </span>
                               )}
                             </div>
