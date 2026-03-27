@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useApp } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Badge } from '../components/ui/badge';
-import { Globe, ChevronRight, Sparkles, Zap, Gift, LayoutDashboard, Star, TrendingUp } from 'lucide-react';
+import { Globe, ChevronRight, Sparkles, Zap, Gift, LayoutDashboard, Star, TrendingUp, Database } from 'lucide-react';
 import { Logo } from '../components/shared/Logo';
 import { GlassCard, GradientButton, motion, AnimatePresence } from '../design-system';
 
@@ -420,6 +420,21 @@ export function WelcomePage() {
       >
         {t.copyright}
       </motion.div>
+
+      {/* Database Check Button - Dev Tool */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        onClick={() => navigate('/quick-db-fix')}
+        className="absolute top-4 right-4 z-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-sm font-semibold"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Database className="w-4 h-4" />
+        <span className="hidden sm:inline">Fix Database</span>
+        <span className="sm:hidden">DB Fix</span>
+      </motion.button>
     </div>
   );
 }

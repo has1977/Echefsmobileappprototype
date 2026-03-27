@@ -153,6 +153,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     verifyDatabaseIntegrity();
     
     console.log('📊 Current branches in DB:', db.getBranches().map(b => ({ id: b.id, name: b.translations.en.name })));
+    
+    // IMPORTANT: Update state after seeding
+    setBranches(db.getBranches(true));
+    setCategories(db.getCategories());
+    setMenuItems(db.getMenuItems({ enabled: true }));
+    setLanguages(db.getEnabledLanguages());
+    setAvailableLanguages(db.getLanguages());
+    setSettings(db.getSettings());
+    
+    console.log('✅ AppContext state updated with fresh data');
   }, []);
   
   // State

@@ -17,7 +17,8 @@ import {
   Zap, Award, Percent, Home, LogOut, User, Eye, Edit2,
   ToggleLeft, ToggleRight, Plus, Filter, Download, Upload,
   ChefHat, TrendingDown, PieChart, MonitorDot, Utensils,
-  MapPin, RefreshCw, ArrowLeft, Menu as MenuIcon, QrCode
+  MapPin, RefreshCw, ArrowLeft, Menu as MenuIcon, QrCode,
+  Database
 } from 'lucide-react';
 import { RevenueChart } from '../components/analytics/RevenueChart';
 
@@ -1215,6 +1216,19 @@ export function UnifiedControlPanel() {
                           User Management
                         </span>
                         <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      
+                      {/* Database Check - Developer Tool */}
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200 hover:border-purple-300"
+                        onClick={() => navigate('/database-check')}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Database className="w-4 h-4 text-purple-600" />
+                          <span className="text-purple-600 font-semibold">Database Check</span>
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-purple-600" />
                       </Button>
                     </>
                   )}

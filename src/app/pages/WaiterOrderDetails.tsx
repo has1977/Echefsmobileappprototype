@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft, Table2, Clock, User, Phone, MapPin, ShoppingCart,
@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import type { MenuType } from '../lib/types';
+import { AddItemToOrderModal } from '../components/waiter/AddItemToOrderModal';
 
 interface OrderItem {
   id: string;
@@ -55,6 +56,7 @@ interface Order {
 export function WaiterOrderDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
   const { t, i18n } = useTranslation();
   const [order, setOrder] = useState<Order | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -62,111 +64,171 @@ export function WaiterOrderDetails() {
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  
-  // Add Item Modal States
-  const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selectedMenuItem, setSelectedMenuItem] = useState<any>(null);
-  const [itemQuantity, setItemQuantity] = useState(1);
-  const [itemNotes, setItemNotes] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedMenuType, setSelectedMenuType] = useState<MenuType>('dine_in');
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadOrderDetails();
-    loadMenuItems();
-    loadCategories();
-  }, [id]);
+  }, [id, location.state]);
 
   const loadOrderDetails = () => {
-    // Try to load from localStorage first
+    // First, check if order was passed via navigation state
+    const passedOrder = (location.state as any)?.order;
+    
+    if (passedOrder) {
+      // Use the passed order data and create full order object
+      const fullOrder: Order = {
+        id: passedOrder.id,
+        order_number: passedOrder.order_number,
+        table_number: passedOrder.table_number,
+        status: passedOrder.status || 'preparing',
+        waiter_name: 'Demo Waiter',
+        waiter_id: 'demo-waiter',
+        branch_name: 'Downtown Bishkek',
+        created_at: passedOrder.created_at || new Date(Date.now() - 15 * 60000),
+        payment_status: 'unpaid',
+        items: generateMockItems(passedOrder),
+        subtotal: passedOrder.total || 45.50,
+        tax: (passedOrder.total || 45.50) * 0.1,
+        total: passedOrder.total || 45.50,
+      };
+      setOrder(fullOrder);
+      return;
+    }
+
+    // Try to load from localStorage
     const waiterOrders = JSON.parse(localStorage.getItem('echefs_waiter_orders') || '[]');
     let foundOrder = waiterOrders.find((o: any) => o.id === id);
 
     // If not found, create mock order for demo
     if (!foundOrder) {
-      foundOrder = {
-        id: id || '1',
-        order_number: '#442',
-        table_number: 'T12',
-        status: 'preparing',
-        waiter_name: 'Demo Waiter',
-        waiter_id: 'demo-waiter',
-        branch_name: 'Downtown Bishkek',
-        created_at: new Date(Date.now() - 15 * 60000),
-        payment_status: 'unpaid',
-        items: [
-          {
-            id: '1',
-            name: 'Grilled Salmon',
-            name_ar: 'سلمون مشوي',
-            quantity: 2,
-            price: 18.50,
-            total: 37.00,
-            status: 'ready',
-            image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=200&h=200&fit=crop',
-            modifiers: [
-              { id: 'm1', name: 'Extra Lemon', price: 0.50 },
-              { id: 'm2', name: 'No Butter', price: 0 }
-            ],
-            special_instructions: 'Well done, please'
-          },
-          {
-            id: '2',
-            name: 'Caesar Salad',
-            name_ar: 'سلطة سيزر',
-            quantity: 1,
-            price: 8.50,
-            total: 8.50,
-            status: 'preparing',
-            image_url: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=200&h=200&fit=crop',
-          },
-          {
-            id: '3',
-            name: 'Iced Tea',
-            name_ar: 'شاي مثلج',
-            quantity: 2,
-            price: 3.50,
-            total: 7.00,
-            status: 'ready',
-            image_url: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=200&h=200&fit=crop',
-          },
-        ],
-        subtotal: 52.50,
-        tax: 5.25,
-        total: 57.75,
-      };
+      foundOrder = createMockOrder(id || '1');
     }
 
     setOrder(foundOrder);
   };
 
-  const loadCategories = () => {
-    const saved = localStorage.getItem('echefs_categories');
-    if (saved) {
-      setCategories(JSON.parse(saved));
-    } else {
-      // Default categories
-      const defaultCategories = [
-        { id: 'appetizers', name: 'Appetizers', name_ar: 'المقبلات', icon: 'utensils-crossed' },
-        { id: 'mains', name: 'Main Course', name_ar: 'الأطباق الرئيسية', icon: 'flame' },
-        { id: 'desserts', name: 'Desserts', name_ar: 'الحلويات', icon: 'cake' },
-        { id: 'drinks', name: 'Beverages', name_ar: 'المشروبات', icon: 'coffee' }
-      ];
-      setCategories(defaultCategories);
-      localStorage.setItem('echefs_categories', JSON.stringify(defaultCategories));
+  const generateMockItems = (orderData: any): OrderItem[] => {
+    // Generate mock items based on the order data
+    const itemsCount = orderData.items_count || 3;
+    const readyItems = orderData.ready_items || 1;
+    
+    const mockItems: OrderItem[] = [
+      {
+        id: '1',
+        name: 'Grilled Salmon',
+        name_ar: 'سلمون مشوي',
+        quantity: 2,
+        price: 18.50,
+        total: 37.00,
+        status: readyItems >= 1 ? 'ready' : 'preparing',
+        image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=200&h=200&fit=crop',
+        modifiers: [
+          { id: 'm1', name: 'Extra Lemon', price: 0.50 },
+          { id: 'm2', name: 'No Butter', price: 0 }
+        ],
+      },
+      {
+        id: '2',
+        name: 'Caesar Salad',
+        name_ar: 'سلطة سيزر',
+        quantity: 1,
+        price: 12.50,
+        total: 12.50,
+        status: readyItems >= 2 ? 'ready' : 'preparing',
+        image_url: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=200&h=200&fit=crop',
+      },
+    ];
+
+    if (itemsCount >= 3) {
+      mockItems.push({
+        id: '3',
+        name: 'Beef Burger',
+        name_ar: 'برجر لحم',
+        quantity: 1,
+        price: 15.00,
+        total: 15.00,
+        status: readyItems >= 3 ? 'ready' : 'pending',
+        image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop',
+        special_instructions: 'Medium rare, extra pickles',
+      });
+    }
+
+    return mockItems.slice(0, itemsCount);
+  };
+
+  const createMockOrder = (orderId: string): Order => {
+    return {
+      id: orderId,
+      order_number: '#442',
+      table_number: 'T12',
+      status: 'preparing',
+      waiter_name: 'Demo Waiter',
+      waiter_id: 'demo-waiter',
+      branch_name: 'Downtown Bishkek',
+      created_at: new Date(Date.now() - 15 * 60000),
+      payment_status: 'unpaid',
+      items: [
+        {
+          id: '1',
+          name: 'Grilled Salmon',
+          name_ar: 'سلمون مشوي',
+          quantity: 2,
+          price: 18.50,
+          total: 37.00,
+          status: 'ready',
+          image_url: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=200&h=200&fit=crop',
+          modifiers: [
+            { id: 'm1', name: 'Extra Lemon', price: 0.50 },
+            { id: 'm2', name: 'No Butter', price: 0 }
+          ],
+        },
+        {
+          id: '2',
+          name: 'Caesar Salad',
+          name_ar: 'سلطة سيزر',
+          quantity: 1,
+          price: 12.50,
+          total: 12.50,
+          status: 'preparing',
+          image_url: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=200&h=200&fit=crop',
+        },
+        {
+          id: '3',
+          name: 'Beef Burger',
+          name_ar: 'برجر لحم',
+          quantity: 1,
+          price: 15.00,
+          total: 15.00,
+          status: 'pending',
+          image_url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&h=200&fit=crop',
+          special_instructions: 'Medium rare, extra pickles',
+        },
+      ],
+      subtotal: 64.50,
+      tax: 6.45,
+      total: 70.95,
+    };
+  };
+
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-gray-500';
+      case 'preparing': return 'bg-blue-500';
+      case 'ready': return 'bg-green-500';
+      case 'served': return 'bg-purple-500';
+      case 'completed': return 'bg-emerald-500';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const loadMenuItems = () => {
-    // Load menu items from localStorage
+  const OLD_UNUSED_loadMenuItems_DELETE_THIS = () => {
+    // This is old unused code - keeping just for reference
     const saved = localStorage.getItem('echefs_menu_items');
     if (saved) {
-      setMenuItems(JSON.parse(saved));
+      // setMenuItems(JSON.parse(saved));
     } else {
-      // Default menu items for demo - comprehensive list
-      setMenuItems([
+      // OLD CODE - NOT NEEDED ANYMORE SINCE WE USE AppContext
+      const oldUnusedItems = [
         // Main Courses
         {
           id: 'mi1',
@@ -434,21 +496,8 @@ export function WaiterOrderDetails() {
           dietary_tags: ['Vegan', 'Gluten Free'],
           preparation_time: 3,
         },
-      ]);
-      // Note: Using localStorage from WaiterOrderTaking for consistency
-      // If items are needed here, they should already be saved from WaiterOrderTaking
-    }
-  };
-
-  const getStatusColor = (status: Order['status']) => {
-    switch (status) {
-      case 'pending': return 'bg-gray-500';
-      case 'preparing': return 'bg-blue-500';
-      case 'ready': return 'bg-green-500';
-      case 'served': return 'bg-purple-500';
-      case 'completed': return 'bg-emerald-500';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      ];
+      // OLD CODE - NOT USED
     }
   };
 
@@ -546,21 +595,8 @@ export function WaiterOrderDetails() {
   };
 
   // ADD ITEM functionality
-  const handleAddItem = () => {
-    if (!order || !selectedMenuItem) return;
-
-    const newItem: OrderItem = {
-      id: `item-${Date.now()}`,
-      name: selectedMenuItem.name,
-      name_ar: selectedMenuItem.name_ar,
-      quantity: itemQuantity,
-      price: selectedMenuItem.price,
-      total: selectedMenuItem.price * itemQuantity,
-      status: 'pending',
-      special_instructions: itemNotes || undefined,
-      image_url: selectedMenuItem.image_url,
-      category: selectedMenuItem.category,
-    };
+  const handleAddItemToOrder = (newItem: any) => {
+    if (!order) return;
 
     const updatedItems = [...order.items, newItem];
     const newSubtotal = updatedItems.reduce((sum, item) => sum + item.total, 0);
@@ -585,13 +621,8 @@ export function WaiterOrderDetails() {
     );
     localStorage.setItem('echefs_waiter_orders', JSON.stringify(updatedOrders));
 
-    // Reset modal state
+    // Close modal
     setShowAddItemModal(false);
-    setSelectedMenuItem(null);
-    setItemQuantity(1);
-    setItemNotes('');
-
-    toast.success(`${selectedMenuItem.name} added to order!`);
   };
 
   // REMOVE ITEM functionality
@@ -695,33 +726,7 @@ export function WaiterOrderDetails() {
     return `${hours}h ${mins % 60}m ago`;
   };
 
-  // Filter menu items
-  const availableCategories = categories.filter(cat => {
-    const hasItems = menuItems.some(item => item.category === cat.id && item.menu_type === selectedMenuType);
-    return hasItems;
-  });
-  
-  const filteredMenuItems = menuItems.filter(item => {
-    const matchesMenuType = item.menu_type === selectedMenuType;
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    const matchesSearch = searchQuery === '' || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.name_ar?.includes(searchQuery);
-    return matchesMenuType && matchesCategory && matchesSearch;
-  });
-
-  // Debug logging for Add Item Modal
-  useEffect(() => {
-    if (showAddItemModal) {
-      console.log('📊 Add Item Modal Debug:');
-      console.log('Current language:', i18n.language);
-      console.log('Categories loaded:', categories.length, categories);
-      console.log('Menu items loaded:', menuItems.length);
-      console.log('Selected menu type:', selectedMenuType);
-      console.log('Available categories:', availableCategories.length, availableCategories);
-      console.log('Filtered items:', filteredMenuItems.length);
-    }
-  }, [showAddItemModal, categories, menuItems, selectedMenuType, availableCategories, filteredMenuItems, i18n.language]);
+  // OLD CODE REMOVED - Now using AddItemToOrderModal component
 
   const readyItemsCount = order?.items.filter(i => i.status === 'ready' || i.status === 'served').length || 0;
   const totalItemsCount = order?.items.length || 0;
@@ -958,14 +963,20 @@ export function WaiterOrderDetails() {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="mt-2 ml-6 space-y-1"
                               >
-                                {item.modifiers.map(mod => (
-                                  <div key={mod.id} className="flex items-center justify-between text-sm">
-                                    <span className="text-gray-600">+ {mod.name}</span>
-                                    <span className="text-gray-500">
-                                      {mod.price > 0 ? `$${mod.price.toFixed(2)}` : 'Free'}
-                                    </span>
-                                  </div>
-                                ))}
+                                {item.modifiers.map((mod, idx) => {
+                                  // Handle both old format (mod.name) and new format (mod.translations)
+                                  const modName = mod.name || mod.translations?.en || mod.translations?.[currentLanguage] || 'Add-on';
+                                  const modPrice = mod.price || 0;
+                                  
+                                  return (
+                                    <div key={mod.id || idx} className="flex items-center justify-between text-sm">
+                                      <span className="text-gray-600">+ {modName}</span>
+                                      <span className="text-gray-500">
+                                        {modPrice > 0 ? `$${modPrice.toFixed(2)}` : 'Free'}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -1236,298 +1247,13 @@ export function WaiterOrderDetails() {
         )}
       </AnimatePresence>
 
-      {/* Add Item Modal */}
-      <AnimatePresence>
-        {showAddItemModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto"
-            onClick={() => {
-              setShowAddItemModal(false);
-              setSelectedMenuItem(null);
-              setItemQuantity(1);
-              setItemNotes('');
-              setSearchQuery('');
-              setSelectedCategory('all');
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-5xl w-full shadow-2xl my-8 max-h-[90vh] flex flex-col"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
-                <h3 className="text-2xl font-bold text-gray-900">Add Item to Order #{order?.order_number}</h3>
-                <button
-                  onClick={() => {
-                    setShowAddItemModal(false);
-                    setSelectedMenuItem(null);
-                    setItemQuantity(1);
-                    setItemNotes('');
-                    setSearchQuery('');
-                    setSelectedCategory('all');
-                  }}
-                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {selectedMenuItem ? (
-                /* Item Details View */
-                <div className="p-6 overflow-y-auto">
-                  <button
-                    onClick={() => {
-                      setSelectedMenuItem(null);
-                      setItemQuantity(1);
-                      setItemNotes('');
-                    }}
-                    className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back to Menu
-                  </button>
-
-                  <div className="bg-gray-50 rounded-2xl p-6">
-                    <div className="flex gap-6 mb-6">
-                      {selectedMenuItem.image_url && (
-                        <div className="w-48 h-48 rounded-xl overflow-hidden flex-shrink-0 border-4 border-white shadow-lg">
-                          <img
-                            src={selectedMenuItem.image_url}
-                            alt={selectedMenuItem.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h4 className="text-2xl font-bold text-gray-900 mb-2">{selectedMenuItem.name}</h4>
-                        {selectedMenuItem.name_ar && (
-                          <p className="text-lg text-gray-600 mb-3" dir="rtl">{selectedMenuItem.name_ar}</p>
-                        )}
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-3xl font-bold text-[#667c67]">${selectedMenuItem.price.toFixed(2)}</span>
-                          {selectedMenuItem.category && (
-                            <span className="px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-sm font-semibold">
-                              {categories.find(c => c.id === selectedMenuItem.category)?.[i18n.language === 'ar' ? 'name_ar' : 'name'] || selectedMenuItem.category}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2">Quantity</label>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => setItemQuantity(Math.max(1, itemQuantity - 1))}
-                            className="w-12 h-12 rounded-xl bg-white hover:bg-gray-100 border-2 border-gray-200 flex items-center justify-center font-bold text-lg transition-all"
-                          >
-                            <Minus className="w-5 h-5" />
-                          </button>
-                          <input
-                            type="number"
-                            value={itemQuantity}
-                            onChange={(e) => setItemQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                            min="1"
-                            className="w-24 text-center px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-0 font-bold text-lg"
-                          />
-                          <button
-                            onClick={() => setItemQuantity(itemQuantity + 1)}
-                            className="w-12 h-12 rounded-xl bg-white hover:bg-gray-100 border-2 border-gray-200 flex items-center justify-center font-bold text-lg transition-all"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-900 mb-2">
-                          Special Instructions (optional)
-                        </label>
-                        <textarea
-                          value={itemNotes}
-                          onChange={(e) => setItemNotes(e.target.value)}
-                          placeholder="E.g., No onions, extra sauce..."
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-0 resize-none"
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="bg-white rounded-xl p-4 border-2 border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-semibold text-gray-700">Total Price:</span>
-                          <span className="text-2xl font-bold text-[#667c67]">
-                            ${(selectedMenuItem.price * itemQuantity).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() => {
-                        setSelectedMenuItem(null);
-                        setItemQuantity(1);
-                        setItemNotes('');
-                      }}
-                      className="flex-1 px-6 py-4 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-lg transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleAddItem}
-                      className="flex-1 px-6 py-4 rounded-xl bg-[#667c67] hover:bg-[#556856] text-white font-bold text-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Add to Order
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Menu Grid View */
-                <div className="flex-1 overflow-y-auto p-6">
-                  {/* Search and Filter */}
-                  <div className="mb-6 space-y-4">
-                    {/* Search Bar */}
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={i18n.language === 'ar' ? 'ابحث عن العناصر...' : 'Search menu items...'}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#667c67] focus:ring-0"
-                      />
-                    </div>
-
-                    {/* Menu Type Filter */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {(['dine_in', 'takeaway', 'delivery'] as MenuType[]).map(type => {
-                        const typeLabels = {
-                          dine_in: { en: 'Dine In', ar: 'داخل المطعم' },
-                          takeaway: { en: 'Takeaway', ar: 'طلبات خارجية' },
-                          delivery: { en: 'Delivery', ar: 'توصيل' }
-                        };
-                        const label = i18n.language === 'ar' ? typeLabels[type].ar : typeLabels[type].en;
-                        const count = menuItems.filter(item => item.menu_type === type).length;
-                        return (
-                          <button
-                            key={type}
-                            onClick={() => {
-                              setSelectedMenuType(type);
-                              setSelectedCategory('all');
-                            }}
-                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                              selectedMenuType === type
-                                ? 'bg-[#667c67] text-white shadow-md scale-105'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {label} ({count})
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Category Filter with Icons */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      <button
-                        onClick={() => setSelectedCategory('all')}
-                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                          selectedCategory === 'all'
-                            ? 'bg-[#667c67] text-white shadow-md scale-105'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {i18n.language === 'ar' ? 'الكل' : 'All'} ({filteredMenuItems.length})
-                      </button>
-                      {availableCategories.map(cat => {
-                        const count = menuItems.filter(item => item.category === cat.id && item.menu_type === selectedMenuType).length;
-                        const getCategoryIcon = (id: string) => {
-                          switch(id) {
-                            case 'appetizers': return <UtensilsCrossed size={14} />;
-                            case 'mains': return <Flame size={14} />;
-                            case 'desserts': return <Cake size={14} />;
-                            case 'drinks': return <Coffee size={14} />;
-                            default: return null;
-                          }
-                        };
-                        const categoryName = i18n.language === 'ar' && cat.name_ar ? cat.name_ar : cat.name;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategory(cat.id)}
-                            className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center gap-1.5 ${
-                              selectedCategory === cat.id
-                                ? 'bg-[#667c67] text-white shadow-md scale-105'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {getCategoryIcon(cat.id)}
-                            {categoryName} ({count})
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Menu Items Grid */}
-                  {filteredMenuItems.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500">No items found</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredMenuItems.map((item: any, index: number) => (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          onClick={() => setSelectedMenuItem(item)}
-                          className="bg-white rounded-xl overflow-hidden border-2 border-gray-200 hover:border-[#667c67] cursor-pointer transition-all hover:shadow-lg group"
-                        >
-                          {item.image_url && (
-                            <div className="h-40 overflow-hidden bg-gray-100">
-                              <img
-                                src={item.image_url}
-                                alt={item.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                          )}
-                          <div className="p-4">
-                            <h5 className="font-bold text-gray-900 mb-1 line-clamp-1">{item.name}</h5>
-                            {item.name_ar && (
-                              <p className="text-sm text-gray-500 mb-2 line-clamp-1" dir="rtl">{item.name_ar}</p>
-                            )}
-                            <div className="flex items-center justify-between">
-                              <span className="text-xl font-bold text-[#667c67]">${item.price.toFixed(2)}</span>
-                              {item.category && (
-                                <span className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-600 font-semibold">
-                                  {categories.find(c => c.id === item.category)?.[i18n.language === 'ar' ? 'name_ar' : 'name'] || item.category}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Add Item Modal - New Design */}
+      <AddItemToOrderModal
+        isOpen={showAddItemModal}
+        onClose={() => setShowAddItemModal(false)}
+        onAddItem={handleAddItemToOrder}
+        currentLanguage={i18n.language}
+      />
     </div>
   );
 }

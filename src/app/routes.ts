@@ -43,6 +43,8 @@ import { TestSessionResetPage } from './pages/TestSessionResetPage';
 import { OrderManagementPage } from './pages/OrderManagementPage';
 import { ResetDataPage } from './pages/ResetDataPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { DatabaseCheck } from './pages/DatabaseCheck';
+import { QuickDbFix } from './pages/QuickDbFix';
 
 // Manager Pages (still accessible from control panel)
 import { ManagerMenuManagement } from './pages/manager/ManagerMenuManagement';
@@ -139,6 +141,14 @@ export const router = createBrowserRouter([
         path: 'reset-data',
         Component: ResetDataPage,
       },
+      {
+        path: 'database-check',
+        Component: DatabaseCheck,
+      },
+      {
+        path: 'quick-db-fix',
+        Component: QuickDbFix,
+      },
       // Removed duplicate OrderManagementPage - now only in MobileLayout
       {
         path: 'admin',
@@ -220,6 +230,10 @@ export const router = createBrowserRouter([
       {
         path: 'waiter/new-order',
         Component: WaiterOrderTaking,
+      },
+      {
+        path: 'waiter/scan-table',
+        Component: WaiterScanTable,
       },
       
       // Customer Routes (wrapped in MobileLayout)

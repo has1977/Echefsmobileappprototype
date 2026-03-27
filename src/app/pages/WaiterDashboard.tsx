@@ -287,7 +287,7 @@ export function WaiterDashboard() {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <button
             onClick={() => navigate('/waiter/new-order')}
             className="bg-gradient-to-r from-[#667c67] to-[#546352] hover:from-[#546352] hover:to-[#667c67] text-white p-6 rounded-2xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
@@ -302,14 +302,6 @@ export function WaiterDashboard() {
           >
             <QrCode className="w-6 h-6" />
             Scan Table QR
-          </button>
-          
-          <button
-            onClick={() => navigate('/waiter/tables')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white p-6 rounded-2xl font-bold text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-          >
-            <Table2 className="w-6 h-6" />
-            View Tables
           </button>
         </div>
 
@@ -379,7 +371,7 @@ export function WaiterDashboard() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => navigate(`/waiter/order-details/${order.id}`)}
+                      onClick={() => navigate(`/waiter/order-details/${order.id}`, { state: { order } })}
                       className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer border-2 border-transparent hover:border-[#667c67]"
                     >
                       {/* Header */}
